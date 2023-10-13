@@ -4,6 +4,10 @@ public class B extends A {
 
     public int n1 = 666;
 
+    public void test() {
+        System.out.println("super.n1=" + super.n1); // 100；先查询A类，如果A类没有再查询B类
+    }
+
     public void hi() {  // 访问父类的属性，但不能访问父类的 private 属性
         System.out.println(super.n1 + " " + super.n2 + " " + super.n3);
     }

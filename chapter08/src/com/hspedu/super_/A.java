@@ -1,6 +1,6 @@
 package com.hspedu.super_;
 
-public class A {
+public class A extends Base {
     // 四个属性
     public int n1 = 100;
     protected int n2 = 200;
