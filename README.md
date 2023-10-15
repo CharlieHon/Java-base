@@ -280,7 +280,7 @@ class Son extends Father {
 
 执行 `Son son = new Son();`内存中的布局
 
-1. 在方法去加载类。首先加载 `Object`，然后依次加载 `GranPa`，`Father`，`Son`
+1. 在方法区加载类。首先加载 `Object`，然后依次加载 `GranPa`，`Father`，`Son`
 2. 在堆区开辟内存。首先为 `GrandPa`的属性开辟空间，然后依次为 `Father`，`Son`开辟内存空间。
 3. 最后将对象地址 `0x11`返回给引用变量。对象中包含所有继承的属性。
 
@@ -441,6 +441,220 @@ class BB extends AA { }
 
 1. 当调用对象方法的时候，该方法会和该对象的**内存地址/运行类型**绑定
 2. **当调用对象属性时，没有动态绑定机制，哪里声明，哪里**使用。`2023-10-13:P316`
+
+```java
+package com.hspedu.poly_.dynamic_;
+
+public class DynamicBinding {
+    public static void main(String[] args) {
+        // a 的编译类型是 A，运行类型是 B
+        A a = new B();  // 向上转型
+        /*
+        1. 当调用对象方法时，该方法会和该对象的内存地址/运行类型绑定
+        2. 当调用对象属性时，没有动态绑定机制，哪里声明，哪里使用
+         */
+        System.out.println("a.sum(): " + a.sum());  // a.sum(): 40 -> 30
+        System.out.println("a.sum1(): " + a.sum1());    // a.sum1(): 30 -> 20
+        System.out.println("a.i: " + a.i);    // 10，属性不会继承，调用属性时根据编译类型来
+    }
+}
+
+class A {
+    public int i = 10;
+    // 动态绑定
+    public int sum() {
+        return getI() + 10; // 20 + 10 -> 30
+    }
+    public int sum1() {
+        return i + 10;  // 10 + 10 -> 20
+    }
+    public int getI() {
+        return i;
+    }
+}
+
+class B extends A {
+    public int i = 20;
+//    public int sum() {
+//        return i + 20;
+//    }
+    public int getI() {
+        return i;
+    }
+//    public int sum1() {
+//        return i + 10;
+//    }
+}
+```
+
+多态数组
+
+- 数组的定义类型为父类类型，里面保存的实际元素类型为子类类型。
+
+多态实参
+
+- 方法定义的形参类型为父类型，实参类型允许子类类型
+
+### Object类详解
+
+- `equal`方法：`==`和 `equals`的对比
+
+1. **`==`：既可以判断基本类型，又可以判断引用类型**
+2. **`==`：如果判断基本类型，判断的是值是否相等。**
+3. **`==`：如果判断引用类型，判断的是地址是否相等，即判定是不是同一个对象。**
+4. **`equals`：是 `Object`类中的方法，只能判断引用类型**
+5. **默认判断的是地址是否相等，子类中往往重写该方法，用于判断内容是否相等。**
+
+```java
+package com.hspedu.object_;
+
+public class Equals01 {
+    public static void main(String[] args) {
+        A a = new A();
+        A b = a;
+        A c = b;
+        // ==：对于引用类型，判断的是不是同一个对象
+        System.out.println(a == c); // true
+        System.out.println(b == c); // true
+
+        B obj = a;  // 虽然编译类型不同，但是指向的内存地址相同
+        System.out.println(obj == a);   // true
+
+        // ==：对于基本类型，判断的是值是否相等
+        int num1 = 10;
+        double num2 = 10.0;
+        System.out.println(num1 == num2);   // true
+
+        // 查看实现/原码：ctrl + b
+        // equals()只能判断引用类型，默认判断的是地址是否相等
+        "Hello".equals("hello");
+/*
+    public boolean equals(Object anObject) {
+        if (this == anObject) { // 如果是同一个对象(地址相同)
+            return true;        // 返回 true
+        }
+        if (anObject instanceof String) {   // 判断类型
+            String anotherString = (String)anObject;    // 向下转型
+            int n = value.length;
+            if (n == anotherString.value.length) {  // 如果长度相同
+                char v1[] = value;
+                char v2[] = anotherString.value;
+                int i = 0;
+                while (n-- != 0) {  // 一个一个比较字符
+                    if (v1[i] != v2[i])
+                        return false;
+                    i++;
+                }
+                return true;    // 如果两个字符串的所有字符都相等，则返回true
+            }
+        }
+        return false;
+    }
+ */
+        Integer i = new Integer(100);
+        Integer i1 = new Integer(100);
+        System.out.println(i == i1);    // false    引用类型，判断的是否为同一对象
+        System.out.println(i.equals(i1));   // true 重写equals方法，先判断是否为同一类型，再判断值是否相等
+        System.out.println(i.equals(100.));   // false 类型不同，直接返回false
+
+        String str1 = new String("Charlie");
+        String str2 = new String("Charlie");
+        System.out.println(str1 == str2);   // 引用类型，判断地址不同，返回 false
+        System.out.println(str1.equals(str2));  // true 值相同
+    }
+}
+
+class B {}
+class A extends B {}
+```
+
+- `hashCode()`方法
+
+1. 提高具有哈希结构的日期的效率！
+2. 两个引用，如果指向同一个对象，则哈希值是一样的！
+3. 两个引用，如果指向的是不同对象，则哈希值是不一样的
+4. 哈希值主要根据地址号来的！不能完全将哈希值等价于地址
+5. 后面在集合中 `hashCode`如果需要的话，也会重写
+
+```java
+public class HashCode {
+    public static void main(String[] args) {
+        AA aa = new AA();
+        AA aa2 = new AA();
+        AA aa3 = aa;
+        System.out.println("aa.hashCode()=" + aa.hashCode());   // 460141958
+        System.out.println("aa2.hashCode()=" + aa2.hashCode()); // 1163157884
+        System.out.println("aa3.hashCode()=" + aa3.hashCode()); // 460141958
+    }
+}
+class AA {}
+```
+
+- `toString()`方法
+
+1. 默认返回：全类名+`@`+哈希值的十六进制
+2. 子类往往会重写 `toString`方法，用于返回对象的属性信息
+3. 当直接输出一个对象时，`toString`方法会被默认调用
+
+```java
+package com.hspedu.object_;
+
+public class ToString_ {
+    public static void main(String[] args) {
+        /*  Object中的toString()方法
+        // 1. getClass().getName()：类的全类名(包名+类名)
+        // 2. Integer.toHexString(hashCode())：将对象的 hashCode 值转成16进制字符串
+            public String toString() {
+                return getClass().getName() + "@" + Integer.toHexString(hashCode());
+            }
+         */
+
+        Monster monster = new Monster("小旋风", "巡山", 200);
+//        System.out.println(monster.toString()); // 重写前：com.hspedu.object_.Monster@1b6d3586
+        System.out.println(monster.toString()); // 重写后：Monster{name='小旋风', job='巡山', salary=200.0}
+        System.out.println(monster);    // 当输出一个对象时，toString方法会被默认调用；输出同上
+    }
+}
+
+class Monster {
+    private String name;
+    private String job;
+    private double salary;
+
+    public Monster(String name, String job, double salary) {
+        this.name = name;
+        this.job = job;
+        this.salary = salary;
+    }
+
+    // 重写toString方法，输出对象的属性
+    @Override
+    public String toString() {  // 重写后，一般是把属性输出
+        return "Monster{" +
+                "name='" + name + '\'' +
+                ", job='" + job + '\'' +
+                ", salary=" + salary +
+                '}';
+    }
+}
+```
+
+- `finalize`方法
+
+1. 当对象被回收时，系统自动调用该对象的 `finalize`方法。子类可以重写该方法，做一些**释放资源**的操作
+2. 什么时候被回收：当某个对象没有任何引用时，则jvm就认为这个对象是一个垃圾对象，就会使用垃圾回收机制来销毁该对象，在销毁该对象前，会先调用 `finalize`方法
+3. 垃圾回收机制的调用，是由系统来决定的，也可以通过 `System.gc()`主动触发垃圾回收机制
+
+### 断点调试
+
+1. 在断点调试过程中，是**运行状态**，是以对象的**运行类型**来执行的 `2023-10-15:P331`
+
+| 快捷键       | 功能                     |
+| ------------ | ------------------------ |
+| `F7`       | 跳入方法内               |
+| `F8`       | 跳过                     |
+| `shift+F8` | 跳出方法                 |
+| `F9`       | resume，执行到下一个断点 |
 
 
 
