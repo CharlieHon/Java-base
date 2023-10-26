@@ -1232,6 +1232,148 @@ class Outer {	// 外部类
 >> 成员内部类和静态内部类放在外部类的成员位置，本质就是一个成员
 >>
 
+### 枚举
+
+枚举(enumeration)是一组常量的集合，即属于一种特殊的类，里面只包含一组有限的特定的对象。
+
+枚举的两种实现方式
+
+1. **自定义**类实现枚举
+
+```md
+进行自定义类实现枚举，有如下特点：
+1）构造器私有化
+2）在本类内部创建一组对象
+3）对外暴露对象（通过为对象添加`public static final`修饰符）
+4）可以提供getXXX方法，但是不要提供setXXX方法
+```
+
+> 1. 不需要提供setXXX方法，因为枚举对象值通常为只读
+> 2. 对枚举对象/属性使用 `static + final`共同修饰，实现底层优化
+> 3. 枚举对象名通常使用全部大写，常量的命名规范
+> 4. 枚举对象根据需要，也可以由多个属性
+
+2. enum关键字实现枚举
+
+```
+     如果使用了 enum 来实现枚举类
+     1. 使用关键字 enum 替代 class
+     2. public static final Season2 SPRING = new Season2("春天", "温暖");
+      ->  SPRING("春天", "温暖");
+          常量名(实参列表);
+     3. 如果有多个常量(对象)，使用 , 逗号间隔即可
+     4. 如果使用 enum 实现枚举，要求将定义的常量对象，写在前面
+```
+
+> `enum`关键字实现枚举注意事项
+>
+> 1. 当使用 `enum`关键字开发一个枚举类时，默认会继承 `Enum`类，而且是一个 `final`类。使用  `JavaP`工具演示
+> 2. 传统的 `public static final Season2 SPRING = new Season2();`，简化为 `SPRING();`，这里必须知道，它调用的是哪个构造器
+> 3. 如果**使用无参构造器 创建 枚举对象，则实参列表和小括号都可以省略**
+> 4. 当有多个枚举对象时，使用 `,`分隔，最后有一个分号结尾
+> 5. **枚举对象必须放在枚举类的行首**
+
+![1698290412139](image/README/1698290412139.png)
+
+enum常用方法说明
+
+>> 说明：使用关键字 `enum`时，会隐式继承 `Enum`类，这样就可以使用 `Enum`类相关的方法
+>>
+>
+> ![1698291245740](image/README/1698291245740.png)
+>
+> 1. toString：Enum类已经重写过了，返回的是当前对象名，子类可以重写该方法，用于返回对象的属性信息
+> 2. name：返回当前**对象名（常量名）**，子类中不能重写
+> 3. ordinal：返回当前对象的**位置号，默认从0开始**
+> 4. values：返回当前枚举类中所有常量
+> 5. valueOf：**将字符串转换成枚举对象**，要求字符串必须为已有的常量名，否则报异常
+> 6. compareTo：比较两个枚举常量，比较的就是**位置号**！
+
+enum实现接口
+
+> 1) 使用 `enum`关键字后，就不能在继承其他类了，因为 `enum`类会隐式继承 `Enum`类，而Java是单继承机制
+> 2) 枚举类和普通类一样，可以实现接口，如下形式
+>
+> `enum 类名 implements 接口1, 接口2 {}`
+
+### 注解的理解
+
+1. 注解(Annotation)也被称为元数据(Metadata)，用于修饰解释包、类、方法、属性、构造器、局部变量等数据信息。
+2. 和注释一样，注解不影响程序逻辑，但注解可以被编译或运行，相当于嵌入在代码中的补充信息。
+3. 在JavaSE中，注解的使用目的比较简单，例如标记过失的功能，忽略警告等。在JavaEE中注解占据了更重要的角色，例如用来配置应用程序的任何切面，代替javaEE旧版中所遗留的繁冗代码和XML配置等。
+
+- `@Override`：限定某个方法，是重写父类方法，该注解只能用于方法
+
+> 1. `@Override`表示指定重写父类的方法（从编译层面验证），如果父类没有该方法，则会报错
+> 2. 如果不写 `@Override`注解，而父类仍有 `public void fly(){}`，仍然构成重写
+> 3. `@Override`只能修饰方法，不能修饰其他类、包、属性等等
+> 4. 查看 `@Override`注解原码为
+>
+> ```java
+> @Target(ElementType.METHOD)
+> @Retention(RetentionPolicy.SOURCE)
+> public @interface Override {
+> }
+> ```
+>
+> 5. `@Target`是修饰注解的注解，称为元注解
+
+- `@Deprecated`的说明
+
+> 1. 用于表示某个程序元素(类，方法等)已过时
+> 2. 可以修饰方法，类，字段，包，参数等等
+> 3. `@Target(value={CONSTRUCTOR, FIELD, LOCAL_VARIABLE, METHOD, PACKAGE, PARAMETER, TYPE})`
+> 4. `@Deprecated`的作用可以做到新旧版本的兼容和过度
+
+- `@SuppressWarning`：抑制编译器警告
+
+```md
+all，抑制所有警告
+boxing，抑制与封装/拆装作业相关的警告
+cast，抑制与强制转型作业相关的警告
+dep-ann，抑制与淘汰注释相关的警告
+deprecation，抑制与淘汰的相关警告
+fallthrough，抑制与switch陈述式中遗漏break相关的警告
+finally，抑制与未传回finally区块相关的警告
+hiding，抑制与隐藏变数的区域变数相关的警告
+incomplete-switch，抑制与switch陈述式(enum case)中遗漏项目相关的警告
+javadoc，抑制与javadoc相关的警告
+nls，抑制与非nls字串文字相关的警告
+null，抑制与空值分析相关的警告
+rawtypes，抑制与使用raw类型相关的警告
+resource，抑制与使用Closeable类型的资源相关的警告
+restriction，抑制与使用不建议或禁止参照相关的警告
+serial，抑制与可序列化的类别遗漏serialVersionUID栏位相关的警告
+static-access，抑制与静态存取不正确相关的警告
+static-method，抑制与可能宣告为static的方法相关的警告
+super，抑制与置换方法相关但不含super呼叫的警告
+synthetic-access，抑制与内部类别的存取未最佳化相关的警告
+sync-override，抑制因为置换同步方法而遗漏同步化的警告
+unchecked，抑制与未检查的作业相关的警告
+unqualified-field-access，抑制与栏位存取不合格相关的警告
+unused，抑制与未用的程式码及停用的程式码相关的警告
+```
+
+- JDK的元Annotation（元注解）：用于修饰其他Annotation
+
+> 1. `Retention`：指定注解的作用范围，三种 `SOURCE, CLASS, RUNTIME`
+> 2. `Target`：指定注解可以在哪些地方使用
+> 3. `Documented`：指定该注解是否会在javadoc体现
+> 4. `Inherited`：子类会继承父类注解
+
+![1698305136735](image/README/1698305136735.png)
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
