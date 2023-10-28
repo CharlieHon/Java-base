@@ -1432,10 +1432,256 @@ try {
 > 3. 子类重写父类方法时，对抛出异常的规定：子类重写的房啊，所抛出的异常类型要么和父类抛出的异常抑制，要么为父类抛出的类型的字类型
 > 4. 在throws过程中，如果有方法try-catch，就相当于处理异常，就可以不必throws `2023-10-27:P455`
 
+- 自定义异常
 
+当程序中出现了某些“错误”，但该错误信息并没有在Throwable子类中描述处理，这个时候可以自己设计异常类，用于描述该错误信息。
 
+1. 定义类：自定义异常类名继承 `Exception`或 `RuntimeException`
+2. 如果继承 `Exception`，则属于编译异常
+3. 如果继承 `RuntimeException`，属于运行异常(一般情况)
 
+- `throw`和 `throws`的区别
 
+|            | 意义                   | 位置       | 后面跟的东西 |
+| ---------- | ---------------------- | ---------- | ------------ |
+| `throws` | 异常处理的一种方式     | 方法声明处 | 异常类型     |
+| `throw`  | 手动生成异常对象的方式 | 方法体中   | 异常对象     |
+
+### 包装类
+
+- 包装类 `Wrapper`的分类
+
+1. 针对八种基本数据类型相应的引用类型——包装类
+2. 有了类的特点，就可以调用类中的方法
+
+- ![1698463554249](image/README/1698463554249.png)
+
+| 基本数据类型 | 包装类        |
+| ------------ | ------------- |
+| `boolean`  | `Boolean`   |
+| `char`     | `Character` |
+| `byte`     | `Byte`      |
+| `short`    | `Short`     |
+| `int`      | `Integer`   |
+| `long`     | `Long`      |
+| `float`    | `Float`     |
+| `double`   | `Double`    |
+
+- 包装类和基本数据类型
+
+1. jdk5前的手动装箱和拆箱方式：装箱：基本类型->包装类型，反之，拆箱
+2. jdk5以后(含jdk5)的自动装箱和拆箱方式
+3. 自动装箱底层调用的是 `valueOf()`方法，比如 `Integer.valueOf()`
+4. 其他包装类结果类似
+
+```java
+public class WrapperExercise01 {
+    public static void main(String[] args) {
+        Double d = 100d;    // 自动装箱：Double.valueOf(100d)
+        Float f = 1.5f;     // 自动装箱：Float.valueOf(1.5f)
+
+        Object obj1 = true ? new Integer(1) : new Double(2.0);  // 三元运算符，看作一个整体，精度提升为double
+        System.out.println(obj1);   // 1.0
+
+        Object obj2;
+        if (true) {
+            obj2 = new Integer(1);
+        } else {
+            obj2 = new Double(2.0);
+        }
+        System.out.println(obj2);   // 1
+
+        // 包装类型和String类型的相互转换
+        // 包装类(Integer)->String
+        Integer i1 = 100;    // 自动装箱
+        // 方式1
+        String str1 = i1 + "";
+        // 方式2
+        String str2 = i1.toString();
+        // 方式3
+        String str3 = String.valueOf(i1);
+
+        // String -> 包装类(Integer)
+        String str4 = "1895";
+        Integer i2 = Integer.parseInt(str4);    // 返回int类型，自动装箱为Integer
+        Integer i3 = new Integer(str4); // 直接构造器接收 String 参数
+        System.out.println("OK~");
+    }
+}
+```
+
+- Integer类和Character类的常用方法
+
+```java
+public class WrapperMethod {
+    public static void main(String[] args) {
+        System.out.println(Integer.MIN_VALUE);  // -2147483648
+        System.out.println(Integer.MAX_VALUE);  // 2147483647
+
+        System.out.println(Character.isDigit('8')); // true 判断是否是数字
+        System.out.println(Character.isLetter('A'));    // true 判断是否是字母
+        System.out.println(Character.isUpperCase('a'));    // false 判断是否是大写
+        System.out.println(Character.isLowerCase('a'));    // true 判断是否是小写
+
+        System.out.println(Character.isWhitespace('a'));    // false 判断是否是空格
+        System.out.println(Character.toUpperCase('d')); // D 转成大写
+        System.out.println(Character.toLowerCase('X')); // x 转成小写
+
+        Integer i11 = 127;
+        int i12 = 127;
+        // 只要有基本数据类型，判断的是值是否相同
+        System.out.println(i11 == i12); // true
+
+        Integer i13 = 128;
+        int i14 = 128;
+        System.out.println(i13 == i14); // true
+    }
+}
+```
+
+- `String`类的理解和创建对象
+
+1. `String`对象用于保存字符串，也就是一组字符序列
+2. 字符串常量对象是用双引号括起来的字符序列。例如："你好", "13.14"
+3. 字符串的字符使用 `Unicode`字符编码，一个字符(不区分字母还是汉字)占两个字节
+4. `String`类较常用的构造方法
+   - ```java
+      String s1 = new String();
+      String s2 = new String(String original);
+      String s3 = new String(char[] a);
+      String s4 = new String(char[] a, int startIndex, int count);
+     ```
+
+- **※两种创建String对象的区别※**
+
+1. **直接赋值 `String s = "hsp";`**
+   1. **方式一：先从常量池查看是否有 `"hsp"`数据空间，如果有，直接指向；如果没有则重新创建，然后指向。s最终指向的是常量池的空间地址**
+2. **调用构造器 `String s2 = new String("hsp");`**
+   1. **方式二：现在堆中创建空间，里面维护了value属性，指向常量池的hsp空间。如果常量池没有"hsp"空间，重新创建，如果有，直接通过value指向。最终指向的是堆中的空间地址。**
+   2. ![1698479850066](image/README/1698479850066.png)
+
+- `public String intern()`:
+  - 当调用 `intern`方法时，如果池中已经包含了一个等于此String对象的字符串(用 `equals(Object)`方法确定)，则返回池中的字符串。否则，将此String对象添加到池中，并返回此String对象的引用。
+  - 即 `b.intern()`方法最终返回的是常量池的地址/对象
+
+```java
+String s = "ab" + "cd";	// 编译器优化 -> String s = "abcd";
+
+String a = "hello"; // 创建 a 对象
+String b = "abc";   // 创建 b 对象
+// 1. 先创建一个 StringBuilder sb = new StringBuilder();
+// 2. 执行 sb.append("hello");
+// 3.       sb.append("abc");
+// 4. String c = sb.toString(); // new 了一个新对象
+// 最后其实是 c 指向堆中的对象(String) value[] -> 池中 "helloabc"
+String c = a + b;
+String d = "helloabc";  // d 直接指向常量池中的 "helloabc"
+System.out.println(c == d); // false
+String e = "hello" + "abc";
+System.out.println(d == e); // true
+```
+
+> 重要规则：
+>
+> - `String c1 = "ab" + "cd";`：常量相加，看的是池
+> - `String c1 = a + b;`：变量相加，是在堆中
+
+- String类的常见方法
+
+`String`类是保存字符串常量的。每次更新都需要开辟空间，效率较低，因此java设计者还提供了 `StringBuilder`和 `StringBuffer`来增强 `String`的功能，并提高效率。
+
+```java
+public class StringMethod01 {
+    public static void main(String[] args) {
+        // 1. equals：比较内容是否相同，区分大小写
+        String str1 = "hello";
+        String str2 = "Hello";
+        System.out.println(str1 == str2);   // false
+        // 2. equalsIgnoreCase：忽略大小写，判断内容是否相同
+        String name1 = "Charlie";
+        if ("charlie".equalsIgnoreCase(name1)) {
+            System.out.println("Success!"); // Success!
+        } else {
+            System.out.println("Failure!");
+        }
+        // 3. length：获取字符的个数，即字符串的长度
+        System.out.println("橘子".length());  // 2
+        // 4. indexOf：获取字符在字符串对象中第一次出现的索引，索引从0开始，如果找不到则返回-1
+        String s1 = "Bruce@gmail.com";
+        System.out.println(s1.indexOf('@'));    // 5
+        // 5. lastIndexOf：获取字符在字符串对象中最后依次出现的索引，索引从0开始，如果没有返回-1
+        s1 = "Bruce@com@";
+        System.out.println(s1.lastIndexOf('@'));    // 9
+        // 6. subString：截取指定范围的子串
+        String name2 = "hello,张三";
+        System.out.println(name2.substring(6)); // 从索引6开始截取后面所有内容
+        System.out.println(name2.substring(2, 5));  // 截取索引[beginIndex, endIndex)范围的内容
+    }
+}
+```
+
+```java
+public class StringMethod02 {
+    public static void main(String[] args) {
+        // 1. toUpperCase：转成大写
+        String s = "Hello";
+        System.out.println(s.toUpperCase());    // HELLO
+        // 2. toLowerCase：装成小写
+        System.out.println(s.toLowerCase());    // hello
+        // 3. concat：拼接字符串
+        String s1 = "木石";
+        s1 = s1.concat("前盟").concat("阆苑仙葩").concat("美玉无瑕");
+        System.out.println(s1); // 木石前盟阆苑仙葩美玉无瑕
+        // 4. replace(oldChar, replacement)：替换字符串中的字符
+        String s2 = "世人都晓神仙好，惟有功名忘不了！";
+        s2 = s2.replace("功名", "金银");    // s1.replace()执行后，返回的结果才是替换过的，原对象无变化
+        System.out.println(s2); // 世人都晓神仙好，惟有金银忘不了！
+        // 5. split：分隔字符串，对于某些分隔字符，需要进行转义
+        String poem = "安得广厦千万间，大庇天下寒士俱欢颜，风雨不动安如山";
+        String[] split = poem.split("，");   // 以"，"为标准对 poem 进行分隔
+        for (String str :
+                split) {
+            System.out.println(str);
+        }
+        String path = "E:\\aaa\\bbb";
+        split = path.split("\\\\");
+        for (String str :
+                split) {
+            System.out.println(str);    // E:   aaa bbb
+        }
+        // 6. toCharArray：转换成字符数组
+        s = "happy";
+        char[] chs = s.toCharArray();
+        for (int i = 0; i < chs.length; i++) {
+            System.out.print(chs[i] + " "); // h a p p y
+        }
+        System.out.println("");
+        // 7. compareTo：比较两个字符串的大小，如果前者大，则返回正数，后者大，则返回负数，相等则返回0
+        String a = "json";
+        String b = "john";
+        String c = "johnson";
+        /*
+        逐个比较字符，遇到不相同(如下标i)的则返回前一个对象的字符减去后一个对象的字符并返回该值，即 a.charAt(i) - b.charAt(i)
+        如果前面部分都相同，则返回 a.length - b.length
+         */
+        System.out.println(a.compareTo(b)); // 返回值是 's' - 'o' = 4
+        System.out.println(b.compareTo(c)); // 返回值是 b.length - c.length = -3
+        // 8. format：格式化字符串
+        // 1. %s %d %.2f %c 称为占位符
+        // 2. 这些占位符由后面变量来替换
+        // 3. %s：表示字符串；%d：表示正数；%c：表示字符；%.2f：表示浮点数，保留小数点后两位(四舍五入)
+        String name = "张三";
+        int age = 25;
+        char gender = '男';
+        double score = 278.5 / 3;
+        String formatStr = "姓名：%s，性别：%c，年龄：%d，分数：%.2f";
+        String info = String.format(formatStr, name, gender, age, score);
+        System.out.println(info);   // 姓名：张三，性别：男，年龄：25，分数：92.83
+    }
+}
+```
+
+`2023-10-28:P475`
 
 1
 
