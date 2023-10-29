@@ -1183,7 +1183,7 @@ class Outer {	// 外部类
 > };
 > ```
 >
-> `2023-10-14:P418`
+> `2023-10-24:P418`
 >
 > 2. 匿名内部类的语法比较奇特，因为匿名内部类既是一个类的定义，同时它本身也是一个对象，因此从语法上看，它既有定义类的特定，也有创建对象的特征。
 > 3. 可以直接访问外部类的所有成员，包含私有的
@@ -1682,6 +1682,172 @@ public class StringMethod02 {
 ```
 
 `2023-10-28:P475`
+
+### StringBuffer类
+
+- `java.lang.StringBuffer`代表可变的字符序列，可以对字符串内容进行增删
+- 很多方法与 `String`相同，但 `StringBuffer`是可变长度的
+- `StringBuffer`是一个容器
+
+> String VS StringBuffer
+>
+> 1. String保存的是字符串常量，里面的值不能更改，每次String类的更新实际上就是更改地址，效率较低。`private final char value[];`
+> 2. StringBuffer保存的是字符串变量，里面的值可以更改，每次StringBuffer的更新实际上可以更新内容，不用每次更新地址，效率较高。`char[] value;`放在堆中
+
+- `StringBuffer`常用方法
+
+```java
+public class StringBufferMethod {
+    public static void main(String[] args) {
+        StringBuffer s = new StringBuffer("hello");
+        // 增
+        s.append(',');
+        s.append("张三丰");
+        s.append("太极").append(100).append(true).append(10.5);
+        System.out.println(s);  // hello,张三丰太极100true10.5
+        // 删
+        s.delete(11, 14);   // 删除 [11, 14) 索引处字符
+        System.out.println(s);  // hello,张三丰太极true10.5
+        // 改
+        s.replace(9, 11, "无极"); // 将 [9, 11) 索引处字符替换为 无极
+        System.out.println(s);  // hello,张三丰无极true10.5
+        // 查
+        int index = s.indexOf("张三丰");
+        System.out.println(index);  // 6
+        // 插
+        s.insert(9, "张无忌"); // 在索引为9的位置插入 "张无忌"，原来索引为9的内容自动后移
+        System.out.println(s);
+        // 长度
+        System.out.println(s.length()); // 22
+    }
+}
+```
+
+### `StringBuilder`类
+
+1. 一个可变的字符序列。此类提供了一个与 `StringBuffer`兼容的API，但不保证同步(StringBuilder不是线程安全)。该类被设计用作 `StringBuffer`的一个简易替换，**用在字符串缓冲区被单个线程使用的使用**。如果可能，建议优先使用该类，因为在大多数实现中，它比StringBuffer要快
+2. 在StringBuilder上的主要操作是 `append`和 `insert`方法，可重载这些方法以接收任意类型的数据。
+
+> `String, StringBuffer 和 StringBuilder`的比较
+>
+> 1. `StringBuilder`和 `StringBuffer`非常类似，均代表可变的字符序列，而且方法也一样
+> 2. `String`：不可变字符序列，效率低，但是**复用率高**
+>    1. ![1698560677647](image/README/1698560677647.png)
+>    2. 如果对 `String`做大量修改，不要使用 `String`
+>    3. ![1698560993323](image/README/1698560993323.png)
+> 3. `StringBuffer`：可变字符序列、效率较高(增删)、线程安全 `synchronized`
+> 4. `StringBuilder`：可变字符序列、效率最高、线程不安全
+
+### `Math`类
+
+```java
+public class MathMethod {
+    public static void main(String[] args) {
+        // 常用的静态属性
+        System.out.println("e: " + Math.E);
+        System.out.println("PI: " + Math.PI);
+        // 常用的静态方法
+        // 1. abs：求绝对值
+        System.out.println(Math.abs(-12));  // 12
+        // 2. pow：求幂
+        System.out.println(Math.pow(2, 4)); // 16.0
+        // 3. ceil：向上取整，返回 >= 该参数的最小整数(->double)
+        System.out.println(Math.ceil(-3.0001)); // -3.0
+        // 4. floor：向下取整，返回 <= 该参数的最大整数(->double)
+        System.out.println(Math.floor(-4.9999));   // -5.0
+        // 5. round：四舍五入
+        System.out.println(Math.round(5.51)); // 6
+        // 6. sqrt：求开方
+        System.out.println(Math.sqrt(9));   // 3.0
+        // 7. random：求随机数，返回的是 [0, 1) 之间的一个随机小数
+        System.out.println(Math.random());
+        // 获取 [a, b] 之间的一个整数！
+        // (int)(a + Math.random() * (b - a + 1))
+        System.out.println((int)(2 + Math.random() * (7 - 2 + 1))); // 返回 [2, 7] 之间的一个随机整数
+        // 8. max, min：返回两个数之间的最大值、最小值
+        System.out.println(Math.max(10, 66));   // 66
+        System.out.println(Math.min(10, 66));   // 10
+    }
+}
+```
+
+### `Arrays`类
+
+1. `toString()`：返回数组的字符串形式
+2. `sort()`：排序(默认排序和自定义排序)
+3. `binarySearch()`：通过二分搜索法进行查找，要求必须排好序
+
+```java
+import java.util.Arrays;
+import java.util.Comparator;
+
+public class ArraysMethod01 {
+    public static void main(String[] args) {
+        // toString()
+        Integer[] integers = {1, 8, 9, 5};
+        System.out.println(Arrays.toString(integers));  // [1, 8, 9, 5]
+
+        // sort()
+        Integer[] arr = {1, -1, 7, 0, 89};
+//        Arrays.sort(arr);   // 因为数组是引用类型，所以通过 sort 方法，会直接影响到实参 arr。默认升序排序
+        System.out.println(Arrays.toString(arr));   // [-1, 0, 1, 7, 89]
+        // sort()方法重载，通过传入一个接口 Comparator 实现自定义排序
+        // 调用 自定义排序 时，传入两个参数 (1) 排序的数组 arr
+        // (2) 实现了 Comparator 接口的匿名内部类，要求实现 compare 方法
+        Arrays.sort(arr, new Comparator() {
+            @Override
+            public int compare(Object o1, Object o2) {
+                Integer i1 = (Integer) o1;
+                Integer i2 = (Integer) o2;
+//                return i1 - i2;   // 升序排序
+                return i2 - i1;     // 降序排序
+            }
+        });
+        System.out.println("===排序后===");
+        System.out.println(Arrays.toString(arr));
+
+        Integer[] arr = {1, 2, 6, 10, 22, 63};
+        // binarySearch：通过二分搜索进行查找，要求必须有序
+        // 1. 使用 binarySearch 二分查找
+        // 2. 要求该数组是有序的，如果该数组无序，则不能使用
+        // 3. 如果数组中不存在该元素，则返回 如果存在是应处位置 low -> -(lor + 1)
+        int index = Arrays.binarySearch(arr, 16);
+        System.out.println("index=" + index);
+
+        // copyOf：数组元素的数值
+        // 1. 从 arr 数组中，拷贝 arr.length 个元素到 newArr 数组中
+        // 2. 如果拷贝的长度 > arr.length ，就在新数组的后面，增加 null
+        // 3. 如果拷贝长度 < 0，抛出异常
+        // 4. 该方法的底层使用的是 System.arraycopy()
+        Integer[] newArr = Arrays.copyOf(arr, arr.length);
+        System.out.println(Arrays.toString(newArr));    // [1, 2, 6, 10, 22, 63]
+
+        // fill：数组元素的填充
+        // 1. 使用 key:99 去填充 num 数组，可以理解为替换原数组元素
+        Integer[] num = new Integer[]{10, 7, 5};
+        Arrays.fill(num, 99);
+        System.out.println("===num数组填充后===");
+        System.out.println(Arrays.toString(num));   // [99, 99, 99]
+
+        // equals：比较两个数组元素内容是否完全一致
+        // 1. 如果 arr 和 arr2 数组中元素完全一样，则方法返回 ture；否则返回 false
+        Integer[] arr2 = new Integer[]{1, 2, 6, 10, 22, 63};
+        boolean equals = Arrays.equals(arr, arr2);
+        System.out.println(equals); // true
+
+        // asList：将一组值，转换成 list
+        // 1. asList方法，会将 (2, 5, 9, 7) 数据转成一个 List 集合
+        // 2. 返回的 asList 编译类型是 List(接口)
+        // 3.       asList 运行类型是 java.util.Arrays$ArrayList
+        // Arrays 的静态内部类 private static class ArrayList<E> extends AbstractList<E>
+        //                      implements RandomAccess, java.io.Serializable
+        List asList = Arrays.asList(2, 5, 9, 7);
+        System.out.println("asList=" + asList); // asList=[2, 5, 9, 7]
+        System.out.println("asList.getClass()=" + asList.getClass());   // class java.util.Arrays$ArrayList
+    }
+```
+
+`2023-10-29:P486`
 
 1
 
