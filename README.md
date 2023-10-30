@@ -1849,6 +1849,25 @@ public class ArraysMethod01 {
 
 `2023-10-29:P486`
 
+### `System`类
+
+1. `exit`：退出当前程序
+2. `arraycopy`：复制数组元素，比较适合底层调用，一般使用 `Array.copyOf()`完成复制数组
+3. `currentTimeMillens`：返回当前时间距离 `1970-01-01`的毫秒数
+4. `gc`：运行垃圾回收机制 `System.gc()`
+
+### `BigInteger`和 `BigDecimal`类
+
+1. `BigInteger`适合保存比较大的整型
+2. `BigDecimal`适合保存精度更高的浮点数(小数)
+
+### 日期类(`Date, Calendar, `)
+
+![1698666115594](image/README/1698666115594.png)
+
+
+
+
 1
 
 ## END
