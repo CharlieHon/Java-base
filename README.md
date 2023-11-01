@@ -1867,10 +1867,200 @@ public class ArraysMethod01 {
 
 ### 集合
 
-集合的框架体系
+**数组**
+
+1. 长度开始时必须指定，而且一旦指定，不能更改
+2. 保存的必须为同一类型的元素
+3. 使用数组进行增加/删除元素的时候比较麻烦
+
+```java
+Person[] pers = new Person[1];
+pers[0] = new Person();
+// 增加新的Person独享
+Person[] pers2 = new Person[pers.length + 1];
+for(){}	// 拷贝pers数组的元素到pers2
+pers2[per2.length - 1] = new Person();	// 添加新的对象
+```
+
+**集合**
+
+1. 可以动态保存任意多个对象，使用比较方便
+2. 提供了一些列方便的操作对象的方法：add、remove、set、get等
+3. 使用集合添加/删除新元素操作简洁
+
+**集合的框架体系**
 
 | ![1698749979922](image/README/1698749979922.png) | ![1698749868728](image/README/1698749868728.png) |
 | ---------------------------------------------- | ---------------------------------------------- |
+
+```
+1. 集合主要分为两组(单列集合，双列集合)
+2. Collection 接口有两个重要的子接口 List Set 他们的实现子类都是单列集合
+3. Map 接口的实现子类是 双列集合，存放的是 K-V
+```
+
+**`Collection`接口和常用方法**
+
+`public interface Collection<E> extends Iterable<E> {}`
+
+1. `collection`实现子类可以存放多个元素，每个元素可以是 `Object`
+2. 有些Collection的实现类，可以存放重复的元素，有些不可以
+3. 有些Collection的实现类，有些是有序的(List)，有些不是有序(Set)
+4. Collection接口没有直接的实现子类，是通过它的子接口 `Set`和 `List`来实现的
+
+```java
+/*
+add: 添加单个元素
+remove: 删除指定元素
+contains: 查找元素是否存在
+size: 获取元素个数
+isEmpty: 判断是否为空
+clear: 清空
+addAll: 添加多个元素
+containsAll: 查找多个元素是否都存在
+removeAll: 删除多个元素
+// 说明：以 ArrayList 实现类来演示
+ */
+List list = new ArrayList();
+// add: 添加单个元素
+list.add("Bruce");
+list.add(10);   // 等价于 list.add(new Integer(10));
+list.add(true);
+System.out.println("list=" + list); // list=[Bruce, 10, true]
+// remove: 删除指定元素
+list.remove(0); // 删除第一个元素
+list.remove(true);  // 删除指定元素
+// contains: 查找元素是否存在
+System.out.println(list.contains("jack"));  // false
+// size: 获取元素个数
+System.out.println(list.size());    // 1
+// isEmpty: 判断是否为空
+list.clear();
+// addAll: 添加多个元素
+ArrayList<Object> objects = new ArrayList<>();
+objects.add("红楼梦");
+objects.add("三国演义");
+list.addAll(objects);
+System.out.println("list=" + list); // list=[红楼梦, 三国演义]
+// containsAll: 查找多个元素是否都存在
+System.out.println(list.contains(objects)); // true
+// removeAll: 删除多个元素
+list.add("聊斋志异");
+list.removeAll(objects);
+System.out.println("list=" + list); // list=[聊斋志异]
+```
+
+- Collection接口遍历元素方式1-使用 `Iterator`(迭代器)
+
+`public interface Iterable<T> {}`
+
+1. `Iterator`对象称为迭代器，主要用于遍历 `Collection`集合中的元素
+2. 所有实现了 `Collection`接口的集合类都有一个 `iterator()`方法，用以返回一个实现了 `Iterator`接口的对象，即可以返回一个迭代器
+3. `Iterator`的结构
+4. `Iterator`仅用于遍历集合，`Iterator`本身并不存放对象
+
+```java
+// 迭代器的执行原理
+Iterator iterator = coll.iteraor();	// 得到一个集合的迭代器
+// hasNext(): 判断是否还有下一个元素
+while (iterator.hasNext()) {
+	// next();	// 1. 指针下移 2. 将下移以后集合位置上的元素返回
+	System.out.println(iterator.next());
+}
+```
+
+> 提示：在调用 `iterator.next()`方法之前必须要调用 `iteratir.hasNext()`方法进行检测，若不调用，且下一条记录无效，直接调用 `it.next()`会爆出 `NoSuchElementException`异常
+
+`Collection`接口遍历对象方式2-**for循环增强**
+
+> 增强for循环，可以代替iterator迭代器，特点：增强for就是简化版的iterator，本质一样。只能用于遍历集合或数组
+>
+> `for (元素类型 元素名 : 集合名或数组名) {// 访问元素}`
+
+```java
+public class CollectionMethod {
+    @SuppressWarnings({"all"})
+    public static void main(String[] args) {
+        /*
+        add: 添加单个元素
+        remove: 删除指定元素
+        contains: 查找元素是否存在
+        size: 获取元素个数
+        isEmpty: 判断是否为空
+        clear: 清空
+        addAll: 添加多个元素
+        containsAll: 查找多个元素是否都存在
+        removeAll: 删除多个元素
+        // 说明：以 ArrayList 实现类来演示
+         */
+        List list = new ArrayList();
+        // add: 添加单个元素
+        list.add("Bruce");
+        list.add(10);   // 等价于 list.add(new Integer(10));
+        list.add(true);
+        System.out.println("list=" + list); // list=[Bruce, 10, true]
+        // remove: 删除指定元素
+        list.remove(0); // 删除第一个元素
+        list.remove(true);  // 删除指定元素
+        // contains: 查找元素是否存在
+        System.out.println(list.contains("jack"));  // false
+        // size: 获取元素个数
+        System.out.println(list.size());    // 1
+        // isEmpty: 判断是否为空
+        list.clear();
+        // addAll: 添加多个元素
+        ArrayList<Object> objects = new ArrayList<>();
+        objects.add("红楼梦");
+        objects.add("三国演义");
+        list.addAll(objects);
+        System.out.println("list=" + list); // list=[红楼梦, 三国演义]
+        // containsAll: 查找多个元素是否都存在
+        System.out.println(list.contains(objects)); // true
+        // removeAll: 删除多个元素
+        list.add("聊斋志异");
+        list.removeAll(objects);
+        System.out.println("list=" + list); // list=[聊斋志异]
+    }
+}
+```
+
+```java
+import java.util.ArrayList;
+import java.util.List;
+
+public class ListMethod {
+    public static void main(String[] args) {
+        List<Object> list = new ArrayList<>();
+        list.add("张三丰");
+        list.add("贾宝玉");
+        // void add(int index, Object elem): 在index位置插入elem元素
+        list.add(1, "李自成");
+        System.out.println("list=" + list); // list=[张三丰, 李自成, 贾宝玉]
+        // boolean addAll(int index, Collection elems): 从index位置开始将elems中所有元素添加进来
+        List<Object> list2 = new ArrayList();
+        list2.add("Jack");
+        list2.add("Pony");
+        list2.add("Pony");
+        list.addAll(1, list2);
+        System.out.println("list=" + list); // list=[张三丰, Jack, Pony, Pony, 李自成, 贾宝玉]
+        // Object get(int index): 获取指定index位置的元素
+        // int indexOf(Object obj): 返回obj在集合中首次出现的位置
+        System.out.println(list.indexOf("Jack"));   // 1
+        // int lastIndexOf(Object obj): 返回obj在集合中最后一次出现的位置
+        System.out.println(list.lastIndexOf("Pony"));   // 3
+        // Object set(int index, Object elem): 设置指定index位置的元素为elem，相当于替换
+        list.set(1, "marry");
+        System.out.println("list=" + list); // list=[张三丰, marry, Pony, Pony, 李自成, 贾宝玉]
+        // List subList(int fromIndex, int toIndex): 返回从 fromIndex 到 toIndex 位置的子集合
+        List<Object> list3 = list.subList(0, 2);    // 前闭后开：[)
+        System.out.println("list3=" + list3);   // list3=[张三丰, marry]
+    }
+}
+```
+
+`2023-11-01:P509`
+
+1
 
 ### 泛型
 
