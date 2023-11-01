@@ -1865,9 +1865,161 @@ public class ArraysMethod01 {
 
 ![1698666115594](image/README/1698666115594.png)
 
+### 集合
 
+集合的框架体系
 
+| ![1698749979922](image/README/1698749979922.png) | ![1698749868728](image/README/1698749868728.png) |
+| ---------------------------------------------- | ---------------------------------------------- |
+
+### 泛型
+
+传统方法的问题分析
+
+1. 不能对加入到集合 `ArrayList`种的数据类型进行约束(不安全)
+2. 遍历的时候，需要进行类型转换，如果集合中的数据量较大，对效率有影响
+
+泛型解决前面的问题
+
+1. 编译时，检查添加元素的类型，提高了安全性
+2. 减少了类型转换的次数，提高效率
+
+   > - 不使用泛型
+   >   Dog -加入->Object-取出->Dog;	// 放入到ArrayList会先转换成Object，在取出时，还需要转换成Dog
+   > - 使用泛型
+   >   Dog->Dog->Dog;	// 存入时和取出时，不需要类型转换，提高效率
+   >
+3. 不再提示编译警告
+
+**泛型介绍**
+
+1. 泛型又称为**参数化类型**，是JDK5.0出现的新特性，解决数据类型的安全性问题
+2. 在类声明或实例化时只要指定好需要的具体的类型即可
+3. Java泛型可以保证如果程序在编译时没有发出警告，运行时就不会产生 `ClassCastException`异常。提示，代码更加简介、健壮
+4. 泛型的作用是：可以在类声明时通过一个标识表示类中某个属性的类型，或者是某个方法的返回值的类型，或者是参数类型。
+
+**泛型的语法**
+
+```
+interface：接口<T>{}
+class：类<K, V>{}
+```
+
+1. 其中，`T, K, V`不代表值，而是表示类型
+2. 任意字母都可以。常用 `T`表示，是Type的缩写
+
+- 泛型的实例化：在类名后面指定类型参数的值(类型)
+
+泛型语法的注意事项和细节
+
+1. 泛型类型只能是引用类型，不能是基本数据类型
+2. 在指定泛型具体类型后，可以传入该类型或者其子类类型
+3. 泛型使用方式
+4. 如果没有显示指定泛型类型，默认为 `Object`类型
+
+```java
+import java.util.ArrayList;
+import java.util.List;
+
+public class GenericDetail {
+    public static void main(String[] args) {
+        // 1. 泛型类型 T, E 只能是引用类型
+        List<Integer> list = new ArrayList<Integer>();
+//        List<int> list1 = new ArrayList<int>();  // 错误：Type argument cannot be of primitive type
+        // 2. 在给泛型指定具体类型后，可以传入该类型或者其子类类型
+        Pig<A> aPig = new Pig<A>(new A());
+        aPig.show();    // class generic_.A
+        Pig<A> bPig = new Pig<A>(new B());
+        bPig.show();    // class generic_.B
+        // 3. 泛型使用形似和
+        ArrayList<Integer> list1 = new ArrayList<Integer>();
+        // 在实际开发中，往往简写
+        // 编译器会进行类型推断，推荐使用写法
+        ArrayList<Integer> list2 = new ArrayList<>();
+        // 4. 如果不显示指定 T, E 默认为 Object 类型
+        List list3 = new ArrayList();   // 等价于 List<Object> list3 = new ArrayList<>();
+        Tiger tiger = new Tiger();
+//        Tiger<Object> objectTiger = new Tiger<>();    // 与上等价
+    }
+}
+
+class A {}
+class B extends A {}
+
+class Pig<E> {
+    E e;
+
+    public Pig(E e) {
+        this.e = e;
+    }
+
+    public void show() {
+        System.out.println(e.getClass());
+    }
+}
+class Tiger<E> {
+    E e;
+    public Tiger(){}
+}
+```
+
+**自定义泛型类**
+
+```java
+// 基本语法
+class 类名<T, R...> {// ...表示可以有多个泛型
+	// 成员
+}
+```
+
+注意细节
+
+1. 普通成员可以使用泛型(属性、方法)
+2. 使用泛型的数据，不能初始化
+3. 静态方法中不能使用类的泛型
+4. 泛型类的类型，是在创建对象时确定的(因为创建对象时，需要指定确定类型)
+5. 如果在创建对象时，没有指定类型，默认为 `Object`
+
+自定义泛型接口
+
+注意细节
+
+1. 接口中，静态成员也不能使用泛型(和泛型类规定一致)
+2. 接口泛型的类型，在**继承接口**或者**实现接口**时确定
+3. 没有指定类型，默认为 `Object`
+
+自定义泛型方法
+
+```java
+修饰符<T, R...> 返回类型 方法名(参数列表) {}
+```
+
+1. 泛型方法，可以定义在普通类中，也可以定义在泛型类中
+2. 当泛型方法被调用时，类型会确定
+3. `public void eat(E e){}`，修饰符后没有 `<T, R...>`，eat方法不是泛型方法，而是使用了泛型
+
+泛型的继承和通配符
+
+1. 泛型不具备继承性
+2. `<?>`：支持任意泛型类型
+3. `<? extends A>`：支持A类以及A类的子类，规定了泛型的上限
+4. `<? super A>`：支持A类以及A类的父类，不限于直接父类，规定了泛型的下限
+
+**JUnit5单元测试**
+
+在方法上增加注解 `@Test`，`Alt+Enter`提示引入 `Junit5`
+
+```java
+    @Test
+    public void m1() {
+        System.out.println("m1方法被调用");
+    }
+```
+
+`2023-11-01:P569`
 
 1
+
+`P567`
 
 ## END
