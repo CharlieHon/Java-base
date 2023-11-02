@@ -2060,6 +2060,39 @@ public class ListMethod {
 
 `2023-11-01:P509`
 
+`ArrayList`底层结构和源码分析
+
+1. `permits all elements, including null`，ArrayList可以加入null，并且可以多个。 `transient Object[] elementData;`//transient表示瞬间，短暂的，表示该属性不会被序列化
+2. `ArrayList`是由数组来实现数据存储的
+3. ArrayList基本等同于Vector，处理ArrayList是线程不安全(执行效率高)。在多线程情况下，不建议使用ArrayList
+
+`Vector`底层结构和源码剖析
+
+1. `Vector`类的定义说明
+2. Vector底层也是一个对象数组，`protected Object[] elementData`
+3. Vector是线程同步的，即线程安全，Vector类的操作方法带有 `synchronized`
+4. 在开发中，需要线程同步安全时，考虑使用Vector
+
+- `Vector`和 `ArrayList`的比较
+
+|               | 底层结构              | 版本   | 线程安全（同步）效率 | 扩容倍数                                                                                |
+| ------------- | --------------------- | ------ | -------------------- | --------------------------------------------------------------------------------------- |
+| `ArrayList` | 可变数组              | jdk1.2 | 不安全，效率高       | **如果有参构造1.5倍<br />如果是无参<br />1. 第一次10<br />2. 从第二次开始按1.5倍扩容** |
+| `Vector`    | 可变数组 `Object[]` | jdk1.0 | 安全，效率不高       | **- 如果是无参，默认10，满后，就按2倍扩容<br />- 如果指定大小，则每次直接按2倍扩**     |
+
+- `LinkedList`的全面说明
+
+1. `LinkedList`底层实现了双向链表和双端队列特点
+2. 可以添加任意元素(元素可以重复)，包括 `null`
+3. 线程不安全，没有实现同步
+
+> 1. LinkedList底层维护了一个双向链表
+> 2. LinkedList中维护了两个属性 `first`和 `last`分别指向首节点和尾节点
+> 3. 每个节点(Node对象)，里面又维护了 `pre, next, item`三个属性，其中通过prev指向前一个，通过next指向后一个节点。最终实现双向链表
+> 4. 所以 `LinkedList`的元素**添加和删除**，不是通过数组完成的，相对来说效率较高
+
+`2023-11-02:P516`
+
 1
 
 ### 泛型
