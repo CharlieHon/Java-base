@@ -2075,8 +2075,8 @@ public class ListMethod {
 
 - `Vector`和 `ArrayList`的比较
 
-|               | 底层结构              | 版本   | 线程安全（同步）效率 | 扩容倍数                                                                                |
-| ------------- | --------------------- | ------ | -------------------- | --------------------------------------------------------------------------------------- |
+|               | 底层结构              | 版本   | 线程安全（同步）效率 | 扩容倍数                                                                                     |
+| ------------- | --------------------- | ------ | -------------------- | -------------------------------------------------------------------------------------------- |
 | `ArrayList` | 可变数组              | jdk1.2 | 不安全，效率高       | **如果有参构造1.5倍<br />如果是无参<br />1. 第一次10<br />2. 从第二次开始按1.5倍扩容** |
 | `Vector`    | 可变数组 `Object[]` | jdk1.0 | 安全，效率不高       | **- 如果是无参，默认10，满后，就按2倍扩容<br />- 如果指定大小，则每次直接按2倍扩**     |
 
@@ -2092,6 +2092,115 @@ public class ListMethod {
 > 4. 所以 `LinkedList`的元素**添加和删除**，不是通过数组完成的，相对来说效率较高
 
 `2023-11-02:P516`
+
+```java
+package linkedlist_;
+
+import java.util.Iterator;
+import java.util.LinkedList;
+
+public class LinkedListCRUD {
+    public static void main(String[] args) {
+        LinkedList<Object> linkedList = new LinkedList<>();
+        linkedList.add(1);
+        linkedList.add(2);
+        linkedList.add(3);
+        linkedList.add(4);
+        linkedList.add(5);
+        System.out.println("linkedList=" + linkedList); // linkedList=[1, 2, 3, 4, 5]
+        // 演示删除一个结点
+        linkedList.remove();    // 默认删除第一个结点，返回删除结点的内容(item)
+        linkedList.remove(1);   //  按索引删除
+        System.out.println("linkedList=" + linkedList); // linkedList=[2, 4, 5]
+
+        // 修改某个结点对象
+        linkedList.set(1, 6);
+        System.out.println("linedList=" + linkedList);  // linedList=[2, 6, 5]
+
+        // 得到某个结点对象
+        Object o = linkedList.get(2);
+        System.out.println(o);  // 5
+
+        // 遍历：因为 LinkedList 实现了 List 接口，可以使用迭代器和增强for循环
+        System.out.println("===LinkedList遍历===");
+        Iterator<Object> iterator = linkedList.iterator();
+        while (iterator.hasNext()) {
+            Object next = iterator.next();
+            System.out.println(next);
+        }
+        System.out.println("===增强for循环===");
+        for (Object object : linkedList) {
+            System.out.println(object);
+        }
+
+        /*  1.   LinkedList<Object> linkedList = new LinkedList<>();
+                 public LinkedList() {}
+            2. 此时 linkedList 的属性 size = 0 first = null, last = null
+            3. 执行添加
+            public boolean add(E e) {
+                linkLast(e);    // 在尾部进行添加元素
+                return true;
+            }
+            4. 将新的结点，加入到双向链表的最后
+            void linkLast(E e) {
+                final Node<E> l = last;
+                final Node<E> newNode = new Node<>(l, e, null);
+                last = newNode;
+                if (l == null)
+                    first = newNode;
+                else
+                    l.next = newNode;
+                size++;
+                modCount++;
+            }
+         */
+        // 删除结点 linkedList.remove()
+        /*
+            1. 执行 removeFirst
+            public E remove() {
+                return removeFirst();
+            }
+            2. 执行
+            public E removeFirst() {
+                final Node<E> f = first;
+                if (f == null)
+                    throw new NoSuchElementException();
+                return unlinkFirst(f);
+            }
+            3. 执行 unlinkFirst(f) 将 f 指向的双向链表的第一个结点拿掉
+            private E unlinkFirst(Node<E> f) {
+                // assert f == first && f != null;
+                final E element = f.item;   // 返回删除结点的内容(item)
+                final Node<E> next = f.next;
+                f.item = null;
+                f.next = null; // help GC
+                first = next;
+                if (next == null)
+                    last = null;
+                else
+                    next.prev = null;
+                size--;
+                modCount++;
+                return element;
+            }
+         */
+    }
+}
+
+```
+
+`ArrayList`和 `LinkedList`比较
+
+|                | 底层结构 | 增删的效率         | 改查的效率 |
+| -------------- | -------- | ------------------ | ---------- |
+| `ArrayList`  | 可变数组 | 较低，数组扩容     | 较高       |
+| `LinkedList` | 双向链表 | 较高，通过链表追加 | 较低       |
+
+> 1. 如果改查的操作多，选择 `ArrayList`
+> 2. 如果增删的操作多，选择 `LinkedList`
+> 3. 一般来说，程序80%~90%都是查询，因此大部分情况下会选择 `ArrayList`
+
+`2023-11-04:P518`
 
 1
 
