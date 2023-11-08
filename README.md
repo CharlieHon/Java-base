@@ -2202,6 +2202,77 @@ public class LinkedListCRUD {
 
 `2023-11-04:P518`
 
+Map接口实现类-HashMap
+
+1. Map接口的常用实现类：HashMap, Hashtable和Properties
+2. HashMap是Map接口使用频率最高的实现类
+3. HashMap是以 `key-val`对的方式来存储数据(HashMap$Node类型)
+4. key不能重复，但是值可以重复，允许使用null键和null值
+5. 如果添加相同的key，则会覆盖原来的key-val，等同于修改(key不会替换，val会替换)
+6. 与HashSet一样，不保证映射的顺序，因为底层是一个hash表的方式来存储的(jdk8的HashMap底层 `数组+链表+红黑树`)
+7. HashMap没有实现同步，因此是线程不安全的，方法没有做同步互斥的操作，没有 `synchronized`
+8. ![1699426764407](image/README/1699426764407.png)
+
+HashMap扩容机制
+
+1. HashMap底层维护了Node类型的数组table，默认为null
+2. 当创建对象时，将加载因子(loadfactor)初始化为0.75
+3. 当添加kay-val时，通过key的哈希值得到table的索引。然后判断索引处是否有元素，如果没有元素就直接添加。如果该索引处有元素，继续判断该元素的key和准备加入的key是否相等，如果相等，则直接替换val；如果不相等需要判断是树结构还是链表结构，做出相应处理。如果添加时发现容量不够，则需要扩容。
+4. 第1次扩容，则需要扩容table容量为16， 临界值(threshold)为12(16*0.75)
+5. 以后再扩容，则需要扩容table容量为原来的2倍，临界值为原来的2倍，即24，依此类推。
+6. 在Java8中，如果一条链表的元素个数超过 `TREEIFY_THRESHOLD`(默认是8)，并且table的大小 >= `MIN_TREEIFY_CAPACITY`(默认64)，就会进行树化(红黑树)
+
+**HashTable的基本介绍**
+
+1. 存放的元素是键值对，即K-V
+2. hashTable的键和值都不能为null，否则会抛出 `NullPointerException`
+3. hashTable使用方法基本上和HashMap一样
+4. hashTable是线程安全的，hashMap是线程不安全的
+
+|               | 版本 | 线程安全(同步) | 效率 | 允许null键null值 |
+| ------------- | ---- | -------------- | ---- | ---------------- |
+| `HashMap`   | 1.2  | 不安全         | 高   | 可以             |
+| `HashTable` | 1.0  | 安全           | 较低 | 不可以           |
+
+Map接口实现类-Properties
+
+1. Properties类继承自HashTable类并且实现了Map接口，也是使用一种键值对的形式来保存数据
+2. 使用特点和HashTable类似
+3. Properties还可以用于从 `xxx.properties`文件中，加载数据到Properties类对象，并进行读取和修改
+4. 说明：工作后 `xxx.properties`文件通常作为配置文件
+
+**总结-开发中如何选择集合实现类**
+
+在开发中，选择什么集合实现类，主要取决于业务操作特点，然后根据集合实现类特性进行选择，分析如下：
+
+1. 先判断存储的类型（一组对象[单列]或一组键值对[双列]）
+2. 一组对象[单列]：Collection接口
+   1. 允许重复：List
+      1. 增删多：LinkedList【底层维护了一个双向链表】
+      2. 改查多：ArrayList【底层维护Object类型的可变数组】
+   2. 不允许重复：Set
+      1. 无序：HashSet【底层HashMap，维护了一个哈希表，即(数组+链表+红黑树)】
+      2. 排序：TreeSet
+      3. 插入和取出顺序一致：LinkedHashSet【底层LinkedHashMap】，维护数组+双向链表
+3. 一组键值对[双列]：Map
+   1. 键无序：HashMap【底层是：哈希表 jdk7:数组+链表；jdk8：数组+链表+红黑树】
+   2. 键排序：TreeMap
+   3. 键插入和取出顺序一致：LinkedHashMap
+   4. 读取文件：Properties
+
+Collections工具类
+
+1. `Collections`是一个操作Set、List和Map等集合的工具类
+2. Collections中提供了一系列静态的方法对集合进行排序、查询和修改等操作
+
+- 排序操作：(均为static方法)
+
+1. `reverse(List)`：反转List中元素的排序
+2. `shuffle(List)`：对List集合元素进行随机排序
+3. `sort(List)`：根据元素的自然顺序对指定List集合元素按升序排序
+4. `sort(List)`：根据指定的Comparator产生的顺序对List集合元素进行排序
+5. `swap(List, Comparator)`：将指定List集合中的i处元素和j处元素进行交换
+
 1
 
 ### 泛型
