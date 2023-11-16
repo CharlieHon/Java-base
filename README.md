@@ -2575,6 +2575,107 @@ Externalizable // 该接口有方法需要实现
 3. 常见方法
 4. ![1700048873249](image/README/1700048873249.png)
 
+### Java网络编程
+
+- ip地址
+
+> 1. 概念：用于**唯一标识**网络中的每台计算机/主机
+> 2. 查看ip地址：`ipconfig`
+> 3. ip地址的表示形式：点分十进制 `xx.xx.xx.xx`
+>    1. **IP表示：对于IPV4，使用4个字节(32位)表示**
+>    2. ![1700054503162](image/README/1700054503162.png)
+>    3. IPV6使用128位表示地址，16个字节，冒分十六进制表示
+> 4. 每一个十进制数的范围：`0~255`
+> 5. **ip地址的组成=网络地址+主机地址**，比如：192.168.16.69
+> 6. iIPv6是互联网工程任务组射击的用于替代IPv4的下一代IP协议，其地址数量号称可以为全世界的每一粒沙子编上一个地址
+> 7. ![1700054873592](image/README/1700054873592.png)
+
+- **域名：将IP地址映射成域名**。为了方便记忆，解决了记ip的困难
+- **端口号：用于标识计算机上某个特定的网络程序，以整数形式表示(范围 `0~65535`)[2个字节表示端口号]**
+- 0~1024已经被占用，比如 `ssh 22, ftp 21, smtp 25, http 80`
+- 常见的网络程序端口号
+
+  - tomcat:8080
+  - mysql:3306
+  - oracle:1521
+  - sqlserver:1433
+
+**网络通信协议**
+
+> 协议(TCP/IP)
+>
+> - TCP/IP(Transmission Control Protocol/Internet Protocol)的简写，即传输控制协议/因特网互联协议，又叫网络通讯协议，是Internet最基本的协议、是由网络层的IP协议和传输层的TCP协议组成。**协议是数据的一种组织形式**
+
+| ![1700056867591](image/README/1700056867591.png) | ![1700056822003](https://file+.vscode-resource.vscode-cdn.net/e%3A/javacode/image/README/1700056822003.png) |
+| ---------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| ![1700103902526](image/README/1700103902526.png) | ![1700103909116](image/README/1700103909116.png)                                                            |
+
+`11-15:P666`
+
+**InetAddress类**
+
+```java
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+
+/**
+ * 演示 InetAddress类 的使用
+ */
+public class API_ {
+    public static void main(String[] args) throws UnknownHostException {
+        // 1. 获取本机的InetAddress对象
+        InetAddress localHost = InetAddress.getLocalHost();
+        System.out.println(localHost);  // Charlie/169.254.93.117
+        // 2. 根据指定的主机名，获取InetAddress对象
+        InetAddress host1 = InetAddress.getByName("Charlie");
+        System.out.println("host1=" + host1);   // host1=Charlie/169.254.93.117
+        // 3. 根据域名返回InetAddress对象，比如 www.baidu.com 对应的
+        InetAddress host2 = InetAddress.getByName("www.baidu.com");
+        System.out.println("host2=" + host2);   // host2=www.baidu.com/182.61.200.7
+        // 4. 通过InetAddress对象，获取对应的地址
+        String hostAddress = host2.getHostAddress();
+        System.out.println("host2对应的ip=" + hostAddress);    // host2对应的ip=182.61.200.7
+        // 5. 通过InetAddress对象，获取对应的主机名/域名
+        String hostName = host2.getHostName();
+        System.out.println("host2对应的主机名/域名=" + hostName);   // host2对应的主机名/域名=www.baidu.com
+    }
+}
+```
+
+**Socket**
+
+| ![1700104941201](image/README/1700104941201.png)           | ![1700104925110](image/README/1700104925110.png) |
+| -------------------------------------------------------- | ---------------------------------------------- |
+| ![1700119478563](image/README/1700119478563.png)           | ![1700116393414](image/README/1700116393414.png) |
+| `将客户端的图片，通过网络上传到服务器，服务器回复消息` | ![1700122246149](image/README/1700122246149.png) |
+
+TCP网络通信编程
+
+1. 基于客户端-服务端的网络通信
+2. 底层使用的是TCP/IP协议
+3. 应用场景举例：客户端发送数据，服务端接收并显示控制台
+4. 基于Socket的TCP编程
+
+- **netstat指令**
+
+1. `netstat -an`**可以查看当前主机网络情况，包括端口监听情况和网络连接情况**
+2. `netstat -an | more`可以分页显示
+3. 要求在 `dos`控制台下执行
+4. `Listening`表示某个端口在监听
+5. 如果有一个外部程序(客户端)连接到该端口，就会显示一条连接信息
+   2. 使用管理员身份执行 `netstat -anb`可以查看具体监听的程序
+
+**UDP网络编程**
+
+| ![1700133013111](image/README/1700133013111.png) | ![1700132998365](image/README/1700132998365.png) |
+| ---------------------------------------------- | ---------------------------------------------- |
+
+`2023-11-16:P685`
+
 1
+
+> 待完成：
+>
+> `P645~P660`：坦克大战
 
 ## END
