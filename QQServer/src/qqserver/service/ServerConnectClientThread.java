@@ -37,11 +37,7 @@ public class ServerConnectClientThread extends Thread {
                 ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
                 Message message = (Message) ois.readObject();
                 // 根据message的类型，做相应的业务处理
-                if (message.getMesType().equals(MessageType.MESSAGE_GET_ONLINE_FRIEND)) {
-                    // 客户端要在线用户列表
-                    /*
-                    在线用户列表形式 100 200 至尊宝
-                     */
+                if (message.getMesType().equals(MessageType.MESSAGE_GET_ONLINE_FRIEND)) {   // 请求在线用户列表
                     System.out.println(message.getSender() + " 请求在线用户列表");
                     String onlineUser = ManageClientThreads.getOnlineUser();
                     // 构建Message对象并返回给客户端
@@ -52,7 +48,10 @@ public class ServerConnectClientThread extends Thread {
                     // 写入到数据通道，返回给客户端
                     ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
                     oos.writeObject(message1);
-                } else if (message.getMesType().equals(MessageType.MESSAGE_COMM_MES)) {
+                } else if (message.getMesType().equals(MessageType.MESSAGE_COMM_MES)) { // 发送信息
+
+
+
                     // 根据message获取getterId，然后再得到对应的线程
                     ServerConnectClientThread serverConnectClientThread = ManageClientThreads.getServerConnectClientThread(message.getGetter());
                     // 得到对应socket的对象输出流，将message对象转发给指定的客户端
@@ -81,6 +80,12 @@ public class ServerConnectClientThread extends Thread {
                             oos.writeObject(message);
                         }
                     }
+                } else if (message.getMesType().equals(MessageType.MESSAGE_FILE_MES)) {
+                    // 根据getterId获取对应的线程，将message转发
+                    ServerConnectClientThread serverConnectClientThread = ManageClientThreads.getServerConnectClientThread(message.getGetter());
+                    ObjectOutputStream oos = new ObjectOutputStream(serverConnectClientThread.getSocket().getOutputStream());
+                    // 转发
+                    oos.writeObject(message);
                 } else {
                     System.out.println("其它类型message，暂时不处理");
                 }

@@ -1,9 +1,9 @@
 package qqclient.view;
 
+import qqclient.service.FileClientService;
 import qqclient.service.MessageClientService;
 import qqclient.service.UserClientService;
 import qqclient.utils.Utility;
-import qqcommon.User;
 
 /**
  * 客户端的菜单界面
@@ -13,6 +13,7 @@ public class QQView {
     private String key = "";    // 接收用户的键盘输入
     private UserClientService userClientService = new UserClientService();  // 用户登录服务器/注册用户
     private MessageClientService messageClientService = new MessageClientService();
+    private FileClientService fileClientService = new FileClientService();  // 该对象用于传输文件
 
     public static void main(String[] args) {
         new QQView().mainMenu();
@@ -55,7 +56,7 @@ public class QQView {
                                     userClientService.onlineFriendList();
                                     break;
                                 case "2":
-                                    System.out.println("请输入想对大家说的话：");
+                                    System.out.print("请输入想对大家说的话：");
                                     String s = Utility.readString(100);
                                     // 调用一个方法，将消息封装成message对象，发送给服务端
                                     messageClientService.sendMessageToAll(s, userId);
@@ -69,7 +70,13 @@ public class QQView {
                                     messageClientService.sendMessageToOne(content, userId, getterId);
                                     break;
                                 case "4":
-                                    System.out.println("发送文件");
+                                    System.out.print("请输入你想把文件发送给的用户(在线用户)：");
+                                    getterId = Utility.readString(50);
+                                    System.out.print("请输入发送文件的路径(如 d:\\ikun.jpg)：");
+                                    String src = Utility.readString(100);
+                                    System.out.print("请输入把文件发送到对方的路径(如 e:\\kun.jpg)：");
+                                    String dest = Utility.readString(100);
+                                    fileClientService.sendFileToOne(src, dest, userId, getterId);
                                     break;
                                 case "9":
                                     // 调用方法，给服务器发送一个退出系统的message

@@ -2,7 +2,6 @@ package qqserver.service;
 
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Set;
 
 /**
  * 该类用于管理和客户端通信的线程
