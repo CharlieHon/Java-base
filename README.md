@@ -2682,6 +2682,265 @@ TCP网络通信编程
 | `服务器推送新闻`             | ![1700287252547](image/README/1700287252547.png) |
 | `发送离线信息`               | ![1700287814321](image/README/1700287814321.png) |
 
+### 反射机制(reflection)
+
+**通过外部文件配置，在不修改源码情况下来控制程序，也符合设计模型的ocp原则(开闭原则：不修改源码，扩容功能)**
+
+1. 反射机制允许程序在运行期借助 `Reflection API`取得任何类的内部信息(比如成员变量，构造器，成员方法等等)，并能操作对象的属性及方法。反射在设计模式和框架底层都会用到。
+2. 加载完类之后，在堆中就产生一个Class类型的对象(一个类只有一个Class对象)，这个对象包含了类完整结构信息，通过这个对象得到类的结构。这个对象就像一面镜子，通过这个镜子看到类的结构，所以形象地称之为：反射。
+
+| `Java程序在计算机有三个阶段` | ![1700293664435](image/README/1700293664435.png)                                                            |
+| ------------------------------ | --------------------------------------------------------------------------------------------------------- |
+| `Java反射机制可以完成`       | ![1700293876323](image/README/1700293876323.png)                                                            |
+| `反射相关的主要类`           | ![1700294026246](https://file+.vscode-resource.vscode-cdn.net/e%3A/javacode/image/README/1700294026246.png) |
+| `反射优点和缺点`             | ![1700294645713](image/README/1700294645713.png)                                                            |
+| `反射调用优化-关闭访问检测`  | ![1700295338365](image/README/1700295338365.png)                                                            |
+
+**Class类**
+
+| `Class类基本介绍`                  | ![1700368657093](image/README/1700368657093.png)                                                            |
+| ------------------------------------ | --------------------------------------------------------------------------------------------------------- |
+|                                      | ![1700369132784](image/README/1700369132784.png)                                                            |
+| `Class类的常用方法`                | ![1700369160620](image/README/1700369160620.png)                                                            |
+| `获取Class类对象方式1：编译阶段`   | ![1700370136543](image/README/1700370136543.png)                                                            |
+| `获取Class类对象方式2：类加载阶段` | ![1700370174052](image/README/1700370174052.png)                                                            |
+| `获取Class类对象方式3：运行阶段`   | ![1700370838300](image/README/1700370838300.png)                                                            |
+| `基本数据类型`                     | ![1700370863854](image/README/1700370863854.png)                                                            |
+| `哪些类型有Class对象`              | ![1700371118004](image/README/1700371118004.png)                                                            |
+| `类加载`                           | ![1700375483854](image/README/1700375483854.png)                                                            |
+|                                      | ![1700375596469](image/README/1700375596469.png)                                                            |
+| `加载阶段`                         | ![1700375699748](image/README/1700375699748.png)                                                            |
+| `连接阶段-验证`                    | ![1700375844609](image/README/1700375844609.png)                                                            |
+| `连接阶段-准备`                    | ![1700375884900](image/README/1700375884900.png)                                                            |
+| `连接阶段-解析`                    | ![1700376261699](https://file+.vscode-resource.vscode-cdn.net/e%3A/javacode/image/README/1700376261699.png) |
+| `b`                                | ![1700376728159](image/README/1700376728159.png)                                                            |
+
+**类加载**
+
+**反射机制是java实现动态语言的关键，也就是通过反射实现类动态加载**
+
+1. 静态加载：编译时加载相关的类，如果没有则报错，依赖性太强
+2. 动态加载：运行时加载需要的类，如果运行时不用该类，则不报错，降低了依赖性
+
+**类加载的时机**
+
+1. 当创建对象时(new)	// 静
+2. 当子类被加载时，父类也加载	// 静
+3. 调用类中的静态成员时	// 静
+4. 通过反射	// 动
+
+**通过反射获取类的结构信息**
+
+| `java.lang.Class类`             | ![1700377350003](image/README/1700377350003.png) |
+| --------------------------------- | ---------------------------------------------- |
+| `java.lang.reflect.Field`       | ![1700380042888](image/README/1700380042888.png) |
+| `java.lang.reflect.Method`      | ![1700380395531](image/README/1700380395531.png) |
+| `java.lang.reflect.Constructor` | ![1700380803711](image/README/1700380803711.png) |
+
+```java
+package com.hspedu.reflection;
+
+import org.junit.jupiter.api.Test;
+
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+
+public class ReflectionUtils {
+    public static void main(String[] args) {
+
+    }
+
+    @Test
+    public void api_02() throws ClassNotFoundException {
+        // 得到Class对象
+        Class<?> personCls = Class.forName("com.hspedu.reflection.Person");
+
+        // getDeclaredFields：获取本类中所有属性(所有访问权限的，不包含父类)
+        // getModifiers()：返回属性的修饰符，规定：默认修饰符是0，public是1，private是2，protected是4，static是8，final是16
+        //
+        Field[] declaredFields = personCls.getDeclaredFields();
+        for (Field declaredField : declaredFields) {
+            System.out.println("本类中所有属性" + declaredField.getName()
+            + "，该属性的修饰符=" + declaredField.getModifiers()
+            + "，该属性的类型=" + declaredField.getType());
+        }
+
+        // getDeclaredMethods：获取本类中所有方法   m1 m2 m3 m4
+        System.out.println("======");
+        Method[] declaredMethods = personCls.getDeclaredMethods();
+        for (Method declaredMethod : declaredMethods) {
+            System.out.println("本类中所有方法=" + declaredMethod.getName()
+            + "，该方法的访问修饰符=" + declaredMethod.getModifiers()
+            + "，该方法的返回类型=" + declaredMethod.getReturnType());
+
+            // 输出档期方法的形参数组情况
+            Class<?>[] parameterTypes = declaredMethod.getParameterTypes();
+            for (Class<?> parameterType : parameterTypes) {
+                System.out.println("该方法的形参类型=" + parameterType);
+            }
+        }
+
+        // getDeclaredConstructors：获取本类所有构造器
+        System.out.println("======");
+        Constructor<?>[] declaredConstructors = personCls.getDeclaredConstructors();
+        for (Constructor<?> declaredConstructor : declaredConstructors) {
+            System.out.println("本类所有构造器" + declaredConstructor.getName());
+            Class<?>[] parameterTypes = declaredConstructor.getParameterTypes();
+            for (Class<?> parameterType : parameterTypes) {
+                System.out.println("该构造器的形参类型=" + parameterType);
+            }
+        }
+    }
+
+    @Test
+    public void api_01() throws ClassNotFoundException {
+        // 得到Class对象
+        Class<?> personCls = Class.forName("com.hspedu.reflection.Person");
+
+        // getName：得到全类名
+        System.out.println(personCls.getName());    // com.hspedu.reflection.Person
+
+        // getSimpleName：获取简单类名
+        System.out.println("======");
+        System.out.println(personCls.getSimpleName());  // Person
+
+        // getFields：获取所有public修饰的属性，包含本类以及父类的
+        System.out.println("======");
+        Field[] fields = personCls.getFields();
+        for (Field field : fields) {    // name hobby 仅显示public的
+            System.out.println("本类以及父类的属性=" + field.getName());
+        }
+
+        // getDeclaredFields：获取本类中所有属性(所有访问权限的，不包含父类)
+        System.out.println("======");
+        Field[] declaredFields = personCls.getDeclaredFields();
+        for (Field declaredField : declaredFields) {
+            System.out.println("本类中所有属性" + declaredField.getName());
+        }
+
+        // getMethods：获取所有public修饰的方法，包含本类以及父类的
+        System.out.println("======");
+        Method[] methods = personCls.getMethods();
+        for (Method method : methods) { // 父类不局限于直接父类，包括超类 Object等
+            System.out.println("本类以及父类的方法" + method.getName());
+        }
+
+        // getDeclaredMethods：获取本类中所有方法   m1 m2 m3 m4
+        System.out.println("======");
+        Method[] declaredMethods = personCls.getDeclaredMethods();
+        for (Method declaredMethod : declaredMethods) {
+            System.out.println(declaredMethod.getName());
+        }
+
+        // getConstructors：获取所有public修饰的构造器，仅包含本类
+        System.out.println("======");
+        Constructor<?>[] constructors = personCls.getConstructors();
+        for (Constructor<?> constructor : constructors) {
+            System.out.println("本类及父类构造器" + constructor.getName());
+        }
+
+        // getDeclaredConstructors：获取本类所有构造器
+        System.out.println("======");
+        Constructor<?>[] declaredConstructors = personCls.getDeclaredConstructors();
+        for (Constructor<?> declaredConstructor : declaredConstructors) {
+            System.out.println("本类所有构造器" + declaredConstructor.getName());
+        }
+
+        // getPackage：以Package形式返回 包信息
+        System.out.println("======");
+        System.out.println(personCls.getPackage()); // package com.hspedu.reflection
+
+        // ：以Class形式返回父类信息
+        System.out.println("======");
+        System.out.println("父类Class对象" + personCls.getSuperclass());  // class com.hspedu.reflection.A
+
+        // ：以Class[]形式返回接口信息
+        System.out.println("======");
+        Class<?>[] interfaces = personCls.getInterfaces();
+        for (Class<?> anInterface : interfaces) {
+            System.out.println(anInterface.getName());  // IA Ib
+        }
+
+        // ：以Annotation[] 形式返回注解信息
+        System.out.println("======");
+        Annotation[] annotations = personCls.getAnnotations();
+        for (Annotation annotation : annotations) {
+            System.out.println("注解信息=" + annotation);   // 注解信息=@java.lang.Deprecated()
+        }
+    }
+}
+
+class A {
+    public String hobby;
+    public void hi() {
+
+    }
+
+    public A() {
+    }
+}
+
+interface IA {
+
+}
+
+interface IB {
+
+}
+
+@Deprecated
+class Person extends A implements IA, IB {
+    // 属性
+    public String name;
+    protected static int age;
+    String job;
+    private double sal;
+    // 构造器
+
+    public Person() {
+    }
+
+    public Person(String name) {
+        this.name = name;
+    }
+
+    private Person(String name, int age) {
+        this.name = name;
+        this.age = age;
+    }
+
+    // 方法
+    public void m1(String name, int age, double sal) {
+
+    }
+
+    protected String m2() {
+        return null;
+    }
+
+    void m3() {
+
+    }
+    private void m4() {
+
+    }
+}
+```
+
+通过反射创建对象
+
+1. 方式一：调用类中的public修饰的无参构造器
+2. 方式二：调用类中的指定构造器
+
+| `通过反射创建对象`       | ![1700382437789](image/README/1700382437789.png) |
+| -------------------------- | ---------------------------------------------- |
+| `通过反射访问类中的成员` | ![1700383183816](image/README/1700383183816.png) |
+| `访问方法`               | ![1700394677192](image/README/1700394677192.png) |
+
+
+
 1
 
 > 待完成：
