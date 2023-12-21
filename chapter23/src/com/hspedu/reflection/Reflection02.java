@@ -3,7 +3,6 @@ package com.hspedu.reflection;
 import com.hspedu.Cat;
 
 import java.io.FileInputStream;
-import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Method;
 import java.util.Properties;
 
@@ -31,11 +30,11 @@ public class Reflection02 {
     public static void m2() throws Exception {
         Properties properties = new Properties();
         properties.load(new FileInputStream("src/re.properties"));
-        String classfullpath = properties.get("classfullpath").toString();
+        String classFullPath = properties.get("classfullpath").toString();
         String method = properties.get("method").toString();
 
         // 反射
-        Class<?> cls = Class.forName(classfullpath);
+        Class<?> cls = Class.forName(classFullPath);
         Object o = cls.newInstance();
         Method method1 = cls.getMethod(method);
 

@@ -11,7 +11,7 @@ public class Cat {
     }
 
     public void hi() {
-//        System.out.println("hi " + name);
+        System.out.println("hi " + name);
     }
     public void cry() {
         System.out.println(name + " 使用了疯狂乱抓！");
