@@ -377,5 +377,390 @@ ALTER TABLE employee CHANGE `name` use_name VARCHAR(32) NOT NULL DEFAULT '';
 3. Delete语句-删除数据
 4. Select语句-查找数据
 
+- `insert`语句
+- ![img_22.png](img_22.png)
+
+```mysql
+-- 练习insert语句
+SELECT DATABASE();
+USE db01;
+CREATE TABLE `goods` (
+	id INT,
+	good_name VARCHAR(10),
+	price DOUBLE);
+
+-- 添加数据
+INSERT INTO goods (id, good_name, price)
+	VALUES(10, 'HUAWEI', 2000);
+INSERT INTO goods (id, good_name, price)
+	VALUES(12, 'APPLE', 3600);
+SELECT * FROM goods;
 
 
+# insert语句的细节
+-- 1. 插入的数据应与字段的数据类型相同。如把 'abc' 添加到 int 类型会报错
+-- 	如把 '30' 添加到 int类型中，会尝试类型转换，可以进行
+INSERT INTO goods (id, good_name, price)
+	VALUES ('30', 'MI', 1800);
+-- 2. 数据的长度应在列的规定范围内，例如：不能将一个长度为80的字符串加入到长度为40的列中
+-- 3. 在values中列出的数据位置必须与被加入的列的排列位置相对应
+-- 4. 字符和日期型数据应包含在单引号中
+/*insert into goods (id, good_name, price)
+	values (40, VIVO, 2200);
+*/
+-- 5. 列可以插入空值(前提是该字段允许为空，默认可以为空)
+INSERT INTO goods (id, good_name, price)
+	VALUES (40, 'vivo', NULL);
+-- 6. insert into tab_name (列名...) values (), (), () 形式添加多条记录
+INSERT INTO goods (id, good_name, price)
+	VALUES (50, 'oppo', 1900), (60, 'SAM', 3200);
+-- 7. 如果是给表中的所有字段添加数据，可以不写前面字段名称
+INSERT INTO goods VALUES (70, 'X', 3000);
+-- 8. 默认值的使用，当不给某个字段值时，如果有默认值就会添加默认值，否则报错
+--	如果某列没有指定 not null 那么当添加数据时，没有给定值，则会默认为null
+-- 	如果希望指定某个列的默认值，可以在创建表时指定 default
+INSERT INTO goods (id, good_name)
+	VALUES (80, '格力手机');
+```
+
+- `update`语句
+- ![img_23.png](img_23.png)
+- ![img_25.png](img_25.png)
+
+```mysql
+# 演示update
+ALTER TABLE employee ADD salary DOUBLE NOT NULL DEFAULT 1000 AFTER job;
+DESC employee;
+SELECT * FROM employee;
+INSERT INTO employee VALUES 
+	(110, '小妖怪', '1997-10-06', '巡视员', 800, '2021-03-12 10:00:00', '巡逻', '大王叫我来巡山');
+-- 1. 将所有员工的薪水修改为 5000元
+UPDATE employee SET salary = 5000;	# 如果没有带 where 条件，会修改所有的记录，因此需要谨慎
+-- 2. 将姓名为小妖怪的员工薪水修改为3000
+UPDATE employee SET salary = 3000 WHERE user_name = '小妖怪';
+-- 3. 将李自成的薪水在原有基础上增加1000元
+UPDATE employee SET salary = salary + 1000 WHERE user_name = '李自成';
+-- 4. update可以修改多个列，中间使用 , 分隔
+UPDATE employee SET salary = salary + 1000, job = '起义' WHERE user_name = '李自成';
+
+# 使用细节
+/*
+1. update语法可以用新值更新原有表中的各列
+2. set子句指示要修改哪些列和要给予哪些值
+3. where子句指定应更新哪些行。如果没有where，则更新所有行(记录)，因此需要谨慎
+4. 如果需要修改多个字段，可以通过 set filed1 = value1, field2 = value2...
+*/
+```
+
+- `delete`语句
+- ![img_24.png](img_24.png)
+
+```mysql
+# delete 语句演示
+SELECT * FROM employee;
+-- 删除表中名称为小妖怪的记录
+DELETE FROM employee 
+	WHERE user_name = '小妖怪';
+
+# delete使用细节
+-- 1. 如果不适用where子句，将删除表中所有数据
+DELETE FROM employee;
+-- 2. delete语句不能删除某一列的值(可使用update设置为null或者'')
+UPDATE employee SET job = '' WHERE user_name = '李自成';
+-- 3. 使用delete语句仅删除记录，不删除表本身。如果要删除表，使用 drop table 表名;
+DROP TABLE employee;
+```
+
+- `select`语句
+- ![select](img_26.png)
+- ![img_27.png](img_27.png)
+- ![where条件运算符](img_28.png)
+- ![order by](img_29.png)
+
+```mysql
+# select 语句[重点，难点]
+CREATE TABLE student (
+	id INT NOT NULL DEFAULT 1,
+	`name` VARCHAR(20) NOT NULL DEFAULT '',
+	chinese FLOAT NOT NULL DEFAULT 0.0,
+	english FLOAT NOT NULL DEFAULT 0.0,
+	math FLOAT NOT NULL DEFAULT 0.0
+	);
+INSERT INTO student (id, `name`, chinese, english, math) VALUES 
+	(1, '王熙凤', 78, 65, 89),
+	(2, '妙玉', 85, 70, 76),
+	(3, '薛宝钗', 100, 80, 97),
+	(4, '贾宝玉', 90, 70, 80),
+	(5, '林黛玉', 100, 85, 96),
+	(6, '史湘云', 93, 70, 82),
+	(7, '贾探春', 90, 85, 86);
+
+
+-- 1. 查询表中所有学生信息
+SELECT * FROM student;
+-- 2. 查询表中所有学生的姓名和对应的语文成绩
+SELECT `name`, chinese FROM student;
+-- 3. 过滤表中重复数据
+SELECT DISTINCT english FROM student;	# 去掉 english 成绩重复的数据
+-- 4. 要查询的记录，每个字段都相同，才会去重
+SELECT DISTINCT `name`, chinese FROM student;	# 虽然语文成绩相同，但是姓名都不同，不会被去重
+
+# 使用表达式对查询的列进行运算
+-- 1. 统计每个学生的总分
+SELECT `name`, (chinese + english + math) FROM student;
+-- 2. 在所有学生总分上加10分，设置别名表示 name 和 总分成绩
+SELECT `name` AS '姓名', (chinese + english + math + 10) AS '总分' FROM student;
+
+
+# 使用where子句，进行过滤查询
+-- 1. 查询姓名为林黛玉的学生成绩
+SELECT * FROM student WHERE `name` = '林黛玉';
+-- 2. 查询语文成绩大于90分的同学
+SELECT * FROM student WHERE chinese > 90;
+-- 3. 查询总分大于260分的所有同学
+SELECT * FROM student WHERE (chinese+english+math) > 260;
+-- 4. 查询数学大于60并且语文大于85的学生成绩
+SELECT * FROM student WHERE math > 60 AND chinese > 85;
+-- 5. 查询数学成绩大于语文成绩的同学
+SELECT * FROM student WHERE math > chinese;
+-- 6. 查询总分大于240分 并且 数学成绩小于语文成绩的姓贾的学生
+--	'林%' 表示 名字中以林开头就可以
+SELECT *, (chinese+math+english) AS total_score FROM student 
+	WHERE (math+chinese+english) > 240 AND math < chinese AND `name` LIKE '林%';
+
+# 查询语文成绩在80~90之间的学生	between and 是闭区间[]
+SELECT * FROM student WHERE chinese BETWEEN 80 AND 90;
+# 查询数学分数为 89,90,91 的同学
+SELECT * FROM student WHERE math IN (89, 90, 91);
+# 查询所有姓贾的学生成绩
+SELECT * FROM student WHERE `name` LIKE '贾%';
+# 查询数学>80 或 语文>90的学生
+SELECT * FROM student WHERE math > 80 OR chinese > 90;
+
+
+## order by 子句排序查询
+-- 1. 对语文成绩排序后输出[升序]
+SELECT * FROM student ORDER BY chinese ASC;	-- 默认即升序
+-- 2. 对总分按从高到低的顺序输出
+SELECT `name`, (chinese + math + english) AS total_score FROM student 
+	ORDER BY total_score DESC;	-- 使用别名排序
+-- 3. 对姓贾的学生成绩排序输出(升序)
+SELECT `name`, (chinese+math+english) AS total_score FROM student 
+	WHERE `name` LIKE '贾%' ORDER BY total_score ASC;	-- 起别名后，排序也可以按照 (chinese+...)来
+```
+
+### 统计相关函数
+
+- `count`返回行的总数
+  - ![count](img_30.png)
+- `sum`返回满足`where`条件的行的和，一般使用在数值列
+  - ![sum](img_31.png)
+- `avg`函数返回满足`where`条件的一列的平均值
+  - ![avg](img_32.png)
+- `max/min`返回满足`where`条件的一列的最大/最小值
+  - ![max/min](img_33.png)
+
+```mysql
+# 演示mysql的统计函数的使用
+-- 1. 统计一个班级中有多少学生
+SELECT COUNT(*) FROM student;
+-- 2. 统计语文大于90的学生人数
+SELECT COUNT(*) FROM student WHERE chinese > 90;
+-- 3. 统计总分大于250的人数
+SELECT COUNT(*) FROM student WHERE (chinese+math+english) > 250;
+
+/* count(*) 和 count(列名) 的区别
+-- count(*)：返回满足条件的记录的行数
+-- ocunt(列名)：统计满足条件的某列有多少个，但是会排序值为 NULL 的
+*/
+CREATE TABLE t1 (
+	`name` VARCHAR(10));
+INSERT INTO t1 VALUES ('tom'), ('jack'), (NULL);
+SELECT * FROM t1;
+SELECT COUNT(*), COUNT(`name`) FROM t1;	-- 3 2
+
+# 演示sum函数的使用
+-- 统计班级数学总成绩
+SELECT SUM(math) FROM student;
+-- 统计班级各科的总成绩
+SELECT SUM(math), SUM(english), SUM(chinese) FROM student;
+-- 统计班级总成绩的和
+SELECT SUM(chinese+math+english) FROM student;
+-- 统计一个班级语文的平均成绩
+SELECT SUM(chinese) / COUNT(*) FROM student;
+
+# 演示 avg 的使用
+-- 求班级语文平均分
+SELECT AVG(chinese) FROM student;
+-- 求班级总成绩平均分
+SELECT AVG(chinese+math+english), SUM(chinese+math+english)/COUNT(*) FROM student;
+
+# 演示 max/min 使用
+-- 求班级总分的最高分和最低分
+SELECT MAX(math+chinese+english), MIN(chinese+math+english) FROM student;
+-- 求出班级语文最高分和最低分
+SELECT MAX(chinese), MIN(chinese) FROM student;
+```
+
+- `group by`对列进行分组
+  - ![group by](img_34.png)
+  - group by用于对查询的结果分组统计
+- `having`对分组后的结果进行过滤
+  - ![having](img_35.png)
+  - having子句用于限制分组显示结果
+ 
+```mysql
+# 演示 group by + having 使用
+CREATE TABLE dept( /*部门表*/
+	deptno MEDIUMINT   UNSIGNED  NOT NULL  DEFAULT 0,
+	dname VARCHAR(20)  NOT NULL  DEFAULT '',
+	loc VARCHAR(13) NOT NULL DEFAULT ''
+	);
+INSERT INTO dept VALUES 
+	(10, 'accounting', 'NEW YORK'), 
+	(20, 'RESEARCH', 'DALLAS'),
+	(30, 'SALES', 'CHICAGO'),
+	(40, 'OPERATIONS', 'BOSTON');
+SELECT * FROM dept;
+
+#创建表EMP雇员
+CREATE TABLE emp
+(empno  MEDIUMINT UNSIGNED  NOT NULL  DEFAULT 0, /*编号*/
+ename VARCHAR(20) NOT NULL DEFAULT '', /*名字*/
+job VARCHAR(9) NOT NULL DEFAULT '',/*工作*/
+mgr MEDIUMINT UNSIGNED,/*上级编号*/
+hiredate DATE NOT NULL,/*入职时间*/
+sal DECIMAL(7,2)  NOT NULL,/*薪水*/
+comm DECIMAL(7,2),/*红利*/
+deptno MEDIUMINT UNSIGNED NOT NULL DEFAULT 0 /*部门编号*/
+) ;
+-- 添加测试数据
+INSERT INTO emp VALUES(7369, 'SMITH', 'CLERK', 7902, '1990-12-17', 800.00, NULL, 20), 
+(7499, 'ALLEN', 'SALESMAN', 7698, '1991-2-20', 1600.00, 300.00, 30),  
+(7521, 'WARD', 'SALESMAN', 7698, '1991-2-22', 1250.00, 500.00, 30),  
+(7566, 'JONES', 'MANAGER', 7839, '1991-4-2', 2975.00,NULL,20),  
+(7654, 'MARTIN', 'SALESMAN', 7698, '1991-9-28',1250.00,1400.00,30),  
+(7698, 'BLAKE','MANAGER', 7839,'1991-5-1', 2850.00,NULL,30),  
+(7782, 'CLARK','MANAGER', 7839, '1991-6-9',2450.00,NULL,10),  
+(7788, 'SCOTT','ANALYST',7566, '1997-4-19',3000.00,NULL,20),  
+(7839, 'KING','PRESIDENT',NULL,'1991-11-17',5000.00,NULL,10),  
+(7844, 'TURNER', 'SALESMAN',7698, '1991-9-8', 1500.00, NULL,30),  
+(7900, 'JAMES','CLERK',7698, '1991-12-3',950.00,NULL,30),  
+(7902, 'FORD', 'ANALYST',7566,'1991-12-3',3000.00, NULL,20),  
+(7934,'MILLER','CLERK',7782,'1992-1-23', 1300.00, NULL,10);
+SELECT * FROM emp;
+
+#工资级别表
+CREATE TABLE salgrade
+(
+grade MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,	/*工资级别*/
+losal DECIMAL(17,2)  NOT NULL,	/*该级别的最低工资*/
+hisal DECIMAL(17,2)  NOT NULL	/*该级别的最高工资*/
+);
+
+#测试数据
+INSERT INTO salgrade VALUES (1,700,1200);
+INSERT INTO salgrade VALUES (2,1201,1400);
+INSERT INTO salgrade VALUES (3,1401,2000);
+INSERT INTO salgrade VALUES (4,2001,3000);
+INSERT INTO salgrade VALUES (5,3001,9999);
+SELECT * FROM salgrade;
+
+
+-- 1. 如何显示每个部分的平均工资和最高工资
+-- 	按照部分来分组查询
+SELECT AVG(sal), MAX(sal), deptno FROM emp GROUP BY deptno;
+-- 2. 显示每个部门的每种岗位的平均工资和最低工资
+SELECT AVG(sal), MIN(sal), deptno, job FROM emp GROUP BY deptno, job;
+-- 3. 显示平均工资低于2000的部分号和平均工资
+/*
+	化繁为简，各个击破
+	1. 显示各个部门的平均工资和部分号
+	2. 在1的结果基础商，进行过滤，保留 avg(sal) < 2000，对分组后结果过滤 使用having
+	3. 使用别名进行过滤
+*/
+SELECT deptno, AVG(sal) AS avg_sal FROM emp GROUP BY deptno HAVING avg_sal < 2000;
+```
+
+### 字符串相关函数
+
+- ![字符串相关函数](img_36.png)
+
+```mysql
+# 演示 字符串相关函数
+-- charset(str) 返回字符串字符集
+SELECT CHARSET(ename) FROM emp;
+-- concat() 连接字符串
+SELECT CONCAT(ename, ' job is ', job) FROM emp;
+-- instr (string, substring) 返回 substring 在 string 中出现的位置，没有则返回0
+# DUAL：亚元表，系统表用于测试
+SELECT INSTR ('hanshunping', 'ping') FROM DUAL;	# 8
+
+-- ucase 转成大写 lcase 转成小写
+SELECT UCASE(ename), LCASE(ename) FROM emp;
+
+-- left(string, length) 从string中的左边起取出length个字符 right从右边取
+SELECT LEFT(ename, 2) FROM emp;
+
+-- length(str) string长度，按照字节
+SELECT LENGTH(ename) FROM emp;	-- length('李自成') 3*3=9
+
+-- replace(str, search_str, replace_str) 在str中用search_str替换search_str
+-- 			查找job，如果是 MANAGER 就替换为 经理
+SELECT ename, REPLACE(job, 'MANAGER', '经理') FROM emp;
+
+-- strcmp(str1, str2) 逐字符比较两字符串大小
+SELECT STRCMP('asp', 'hsp') FROM DUAL;	-- -1
+
+-- substring(str, position, [, length]) 从str的position位置开始[从1开始计算]，取length个字符
+SELECT SUBSTRING(ename, 1, 2) FROM emp;
+
+-- ltrim rtrim trim 取出前端或后端或左右两端的空格
+SELECT LTRIM(' 李自成') FROM DUAL;
+SELECT RTRIM('李自成  ') FROM DUAL;
+SELECT TRIM('  李自成 ') FROM DUAL;
+
+# 练习：以首字母小写的方式显示所有员工emp的姓名：两种方式
+SELECT CONCAT(LCASE(SUBSTRING(ename, 1, 1)), SUBSTRING(ename, 2)) AS `name` FROM emp;
+SELECT CONCAT(LCASE(LEFT(ename, 1)), SUBSTRING(ename, 2)) AS name2 FROM emp;
+```
+
+### 数学相关函数
+
+- ![math](img_37.png)
+
+```mysql
+# 演示数学相关函数
+-- abs 绝对值
+SELECT ABS(-12) FROM DUAL;
+-- bin(decimal_number) 十进制转二进制
+
+SELECT BIN(10) FROM DUAL;	-- 1010
+-- hex(DecimalNumber) 转十六进制
+-- conv(num1, from_base, to_base) 进制转换，从 from_base 到 to_base
+--	将10进制8转为2进制 -> 1000
+SELECT CONV(8, 10, 2) FROM DUAL;
+-- ceiling(num) 向上取整，得到比num大的最小整数
+
+SELECT CEILING(1.2), CEILING(-1.2) FROM DUAL;	-- -2 -1
+-- floor(num) 向下取整，得到比num小的最大整数
+SELECT FLOOR(1.1) FROM DUAL; -- 1
+
+-- format(num, decimal_places) 保留小数位数(四舍五入)
+SELECT FORMAT(3.1415926, 2) FROM DUAL; -- 3.14
+SELECT FORMAT(3.1415926, 3) FROM DUAL; -- 3.142
+
+-- least(num1, num2 [,...]) 求最小值
+SELECT LEAST(0, -1, 10, 3) FROM DUAL;
+
+-- mode(numerator, denominator) 求余
+SELECT MOD(10, 3) FROM DUAL;	-- 1
+
+-- rand([seed]) 返回随机数，起范围为 [0, 1]
+--	如果设计随机种子，相同的随机种子每次产生值固定
+SELECT RAND(2) FROM DUAL;
+```
+
+### 时间日期相关函数
+
+p763
