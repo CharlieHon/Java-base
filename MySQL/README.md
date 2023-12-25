@@ -763,4 +763,221 @@ SELECT RAND(2) FROM DUAL;
 
 ### 时间日期相关函数
 
-p763
+- ![img_38.png](img_38.png)
+
+| ![img_39.png](img_39.png) | ![img_40.png](img_40.png) | ![img_41.png](img_41.png) |
+|---------------------------|---------------------------|---------------------------|
+
+```mysql
+# 日期时间相关函数
+
+SELECT CURRENT_DATE() FROM DUAL; -- 当前日期：2023-12-25
+SELECT CURRENT_TIME() FROM DUAL; -- 当前时间：16:32:02
+SELECT CURRENT_TIMESTAMP() FROM DUAL; -- 当前时间戳：2023-12-25 16:32:14
+
+-- 创建测试表：信息表
+CREATE TABLE mes (
+	id INT,
+	content VARCHAR(30),
+	send_time DATETIME);
+-- 添加一条记录
+INSERT INTO mes VALUES (1, '北京新闻', CURRENT_TIMESTAMP());
+INSERT INTO mes VALUES (2, '上海新闻', NOW());
+INSERT INTO mes VALUES (3, '广州新闻', NOW());
+SELECT * FROM mes;
+
+-- 1. 显示所有新闻信息，发布日期只显示日期，不用显示时间
+SELECT id, content, DATE(send_time) FROM mes;
+-- 2. 查询在10分钟内发布的新闻
+--				发送日期加10分钟超过现在时间，就表示发送时间是在10分钟内
+SELECT * FROM mes WHERE DATE_ADD(send_time, INTERVAL 10 MINUTE) >= NOW();
+SELECT * FROM mes WHERE send_time >= DATE_SUB(NOW(), INTERVAL 10 MINUTE);
+-- 3. 请在mysql的sql语句中求出 2011-11-11 和 1990-1-1 相差天数
+SELECT DATEDIFF('2011-11-11', '1990-1-1') FROM DUAL; -- 7984
+-- 4. 用sql语句求出你活了多少天
+SELECT DATEDIFF(CURRENT_DATE(), '2001-3-12') FROM DUAL; -- 8323
+-- 如果你能活90岁，i去除你还能活多少天
+-- 思路：以出生日期加90年得到死亡日期；在计算死亡日期到今天的时间差
+SELECT DATEDIFF(DATE_ADD('2001-3-12 10:15:6', INTERVAL 90 YEAR), NOW()) FROM DUAL; -- 24549
+-- timediff(date1, date2) 两个时间差(多少消失多少分钟多少秒)
+SELECT TIMEDIFF('16:45:00', CURRENT_TIME()) FROM DUAL;
+
+# 年月日
+SELECT YEAR(NOW()) FROM DUAL;
+SELECT MONTH(NOW()) FROM DUAL;
+SELECT DAY(NOW()) FROM DUAL;
+-- unix_timestamp 返回1970-1-1 到现在的秒数
+SELECT UNIX_TIMESTAMP() FROM DUAL;
+-- from_unixtime() 把一个unix_timestamp秒数[时间戳]，转成指定格式的日期
+-- 	在开发中，可以存放一个整数，然后表示时间，通过 from_unixtime 转换
+--	在实际开发中，也经常使用 int 保存一个 unix_timestanp 时间戳
+SELECT FROM_UNIXTIME(UNIX_TIMESTAMP(), '%Y-%m-%d %H:%i:%s') FROM DUAL;
+```
+
+### 加密函数和系统函数
+
+- ![img_42.png](img_42.png)
+
+```mysql
+# 演示加密函数和系统函数
+-- user() 查询当前是哪个用户在使用数据库
+-- 可以查看登录到mysql的有些用户，以及登录的IP
+SELECT USER() FROM DUAL;	-- 用户名@IP地址
+-- database() 查询当前使用的数据库
+SELECT DATABASE();
+
+-- md5(str) 为字符串算出一个mds 32的字符串，常用加密
+--	root密码是 hsp -> md5加密 -> 在数据库中存放的是加密后的密码
+SELECT MD5('hsp') FROM DUAL;
+SELECT LENGTH(MD5('hsp')) FROM DUAL; -- 32
+
+-- 演示用户表，存放密码时，是md5
+CREATE TABLE users (
+	id INT,
+	`name` VARCHAR(32) NOT NULL DEFAULT '',
+	pwd CHAR(32) NOT NULL DEFAULT ''
+	);
+INSERT INTO users VALUES (100, '李自成', MD5('lzc'));
+SELECT * FROM users;
+SELECT * FROM users WHERE `name` = '李自成' AND pwd = MD5('lzc');
+-- password(str) 加密函数，Mysql数据库的用户密码就是 PASSWORD函数加密
+SELECT PASSWORD('hsp');
+SELECT LENGTH(PASSWORD('hsp'));	-- 41
+-- 查看数据库mysql中表user下用户信息
+SELECT * FROM mysql.user WHERE `user` = 'root';
+```
+
+### 流程控制函数
+
+- ![img_43.png](img_43.png)
+
+```mysql
+# 演示流程控制语句
+-- if(expr1, expr2, expr3) 如果表达式1为True，则返回expr2，否则返回expr3
+SELECT IF(TRUE, '北京', '上海') FROM DUAL;
+-- inull(expr1, expr2) 如果1不为空NULL，则返回expr1，否则返回expr2
+SELECT IFNULL(NULL, 'hsp'); -- hsp
+-- select case where expr1 then expr2 when expr3 then expr4 end;
+SELECT CASE WHEN TRUE THEN 'jack' WHEN FALSE THEN 'tom' ELSE 'smith' END;
+
+-- 1. 查询emp表，如果comm为null，则显示0.0
+-- 		强调：判断是否为null，要用 is / is not
+SELECT ename, IF(comm IS NULL, 0.0, comm) FROM emp;
+-- 2. 如果emp表的job是 clerk 则显示职员，如果是 manager 则显示经理，如果是 SALESMAN 则显示销售人员
+-- select charset(job) from emp; -- utf8
+SELECT ename, 
+	(SELECT CASE WHEN job='clerk' THEN '职员' 
+		WHEN job='manager' THEN '经理' 
+		WHEN job='salesman' THEN '销售人员'
+		ELSE job END) AS 'career', job 
+	FROM emp;
+```
+
+### mysql表查询-加强
+
+```mysql
+-- 查询加强
+SELECT * FROM emp;
+SELECT * FROM dept;
+SELECT * FROM salgrade;
+
+-- 1. 查询1992.1.1后入职的员工
+-- 	在mysql中，日期类型数据可以直接比较
+SELECT * FROM emp WHERE hiredate > '1992-1-1';
+-- 2. 使用 like 操作符(模糊)查询
+--	%：表示0到多个字符
+--	_：表示单个任意字符
+# 查询首字母为S的员工姓名和工资
+SELECT ename, sal FROM emp WHERE ename LIKE 'S%';
+# 查询第三个字符为大写o的所有员工的姓名和工资
+SELECT ename, sal FROM emp WHERE ename LIKE '__O%';
+
+# 查询没有上级的雇员情况
+SELECT * FROM emp WHERE mgr IS NULL;
+# 查询表结构
+DESC emp;
+
+# order by
+-- 按照工资从低到高的顺序[升序] 显示雇员信息
+SELECT * FROM emp ORDER BY sal ASC;
+-- 按照部分号升序而雇员工资降序排序，显示员工信息
+SELECT * FROM emp ORDER BY deptno ASC, sal DESC;
+```
+
+- ![img_44.png](img_44.png)
+- 推导公式：`select * from table_name order by empno limit (页数-1)*每页行数, 每页行数`
+
+```mysql
+# 分页查询
+-- 按照雇员id号升序取出，每页显示3条记录，请分别显示 第1页 第2页 第3页
+-- 基本语法：select ... from table_name order by field1 asc limit start, rows;
+--	表示从 start+1 行开始取，取出 rows 行，start 从0开始计算
+-- 推导公式：limit (页数-1)*行数, 行数
+SELECT * FROM emp;
+-- 第1页
+SELECT * FROM emp 
+	ORDER BY empno
+	LIMIT 0, 3;
+-- 第2页
+SELECT * FROM emp 
+	ORDER BY empno
+	LIMIT 3, 3;
+-- 第3页
+SELECT * FROM emp 
+	ORDER BY empno
+	LIMIT 6, 3;
+-- 第5页
+SELECT * FROM emp ORDER BY empno LIMIT 12, 3;
+
+-- 练习：按照雇员empno号降序取出，每页显示5条记录。请分别显示 第3页 第5页 对应sql语句
+SELECT * FROM emp ORDER BY empno DESC LIMIT 10, 5;
+SELECT * FROM emp ORDER BY empno DESC LIMIT 20, 5;
+```
+
+- ![img_45.png](img_45.png)
+- 
+- `select deptno, avg(sal) as avg_sal from emp group by deptno having avg_sal > 1000 order by avg_sal desc limit 0, 2;`
+    1. `group by`
+  2. `having`
+  3. `order by`
+  4. `limit`
+
+```mysql
+# 增强 group by 的使用
+SELECT * FROM emp;
+-- 1. 显示每种岗位的雇员总数、平均工资
+SELECT COUNT(*) FROM emp;
+SELECT job, COUNT(*), FORMAT(AVG(sal), 2) FROM emp 
+	GROUP BY job;
+-- 2. 显示雇员总数，以及获得补助的雇员数
+-- 提示：获得补助即 comm is not null;
+-- count(comm)：只统计comm列非空的
+SELECT COUNT(*), COUNT(comm) FROM emp;
+-- 统计没有获得补助的
+-- if(comm is null, 1, null); 如果comm为null，返回1(非空值即可，会统计)，否则返回 null
+SELECT COUNT(*), COUNT(IF(comm IS NULL, 1, NULL)) FROM emp;
+-- 3. 显示管理者的总人数
+SELECT COUNT(DISTINCT mgr) FROM emp; -- 5
+-- 4. 显示雇员工资的最大差额
+SELECT MAX(sal) - MIN(sal) FROM emp; -- 4200
+
+# 统计各个部分(group by)的平均工资，并且是(having)大于1000的，
+-- 并且按照平均工资从高到低排序(order by)，取出前两行记录(limit)
+SELECT deptno, AVG(sal) AS avg_sal 
+	FROM emp 
+	GROUP BY deptno 
+	HAVING avg_sal > 1000 
+	ORDER BY avg_sal DESC 
+	LIMIT 0, 2;
+
+-- 错误，查询列没有包含在 group by 子句中，并且这些列没有使用聚合函数(如 sum, avg等)
+SELECT deptno, job FROM emp GROUP BY deptno;
+# 1. 将非聚合列添加到 group by 子句中
+SELECT deptno, job FROM emp GROUP BY deptno, job;
+# 2. 对非分组列使用聚合函数
+SELECT deptno, COUNT(job) FROM emp GROUP BY deptno;
+```
+
+### 多表查询
+
+P773
