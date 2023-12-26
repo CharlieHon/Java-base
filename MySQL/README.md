@@ -980,4 +980,480 @@ SELECT deptno, COUNT(job) FROM emp GROUP BY deptno;
 
 ### 多表查询
 
-P773
+- **多表查询**是指基于两个和两个以上的表查询。在实际应用中，查询单个表可能不能满足你的需求。
+- `select * from emp, dept;`
+  - 在默认情况下，当两个表查询时，规则：
+    1. 从第1张表中取出一行和第2张表的每一行进行组合，返回结果[含有两张表的所有列]
+    2. 共返回：第1张表行数*第2张表行数，即13 * 4
+    3. 这样多表查询默认处理方式，称为**笛卡尔积**
+    4. 解决多表的关键就是写出正确的过滤条件 `where`，需要进行分析
+  - ![img_46.png](img_46.png)
+- `select * from emp;`
+  - ![img_47.png](img_47.png)
+- `select * from dept;`
+  - ![img_48.png](img_48.png)
+
+```mysql
+# 多表查询
+-- 查询雇员名、雇员工资及所在部门的名字
+/*
+1. 雇员名、雇员工资 来自 emp 表
+2. 部门名字 来自 dept 表
+3. 需求对 emp 和 depy 查询
+4. 当需要指定显示莫格表的某列时，需要使用：表.列名
+5. 提示：多表查询的条件不能少于 表的个数-1，否则会出现笛卡尔积
+*/
+SELECT * FROM emp, dept;
+SELECT * FROM emp;
+SELECT * FROM dept;
+SELECT * FROM salgrade;
+
+SELECT ename, sal, dname FROM emp, dept 
+	WHERE emp.deptno = dept.deptno;
+-- 查询部门号为10的部门名、员工名和工资
+SELECT dname, ename, sal FROM emp, dept
+	WHERE emp.deptno = dept.deptno AND emp.deptno = 10;
+-- 显示各个员工的姓名、工资及其工资的级别
+SELECT ename, sal, grade
+	FROM emp, salgrade -- 也可以不加表名，因为两表无相同列名
+	WHERE emp.sal BETWEEN salgrade.losal AND salgrade.hisal;
+-- 显示雇员名、雇员工资及所在部门的名字，并按部门排序[降序排]
+SELECT ename, sal, dname
+	FROM emp, dept
+	WHERE emp.deptno = dept.deptno
+	ORDER BY emp.deptno DESC;
+```
+
+- **自连接**：在同一张表的连接查询[将同一张表看作两张表]
+
+```mysql
+# 多表查询：自连接
+-- 显示公司公司员工和他的上级的名字
+/*
+员工名字和其上级名字都在 emp
+员工和上级是通过 dept 的 mgr列关联的
+1. 把同一张表当作两张表使用
+2. 需要给表取别名： from 表名 表别名
+3. 如果列名不明确，可以指定列的别名： 列名 as 列别名
+*/
+SELECT worker.ename AS '职员名', boss.ename AS '上级名' 
+	FROM emp AS worker, emp boss	-- 自连接需要设置别名，否则会报错
+	WHERE worker.mgr = boss.empno;
+```
+
+### 表子查询
+
+- **子查询**是指嵌入在其它sql语句中的select语句，也叫嵌套查询
+- 单行子查询：只返回一行数据的子查询语句
+- 多行子查询：返回多行数据的子查询，使用关键字 `IN`
+- 还可以将子查询的结果当作一个新表，可以解决很多问题
+
+```mysql
+# 子查询演示
+-- 显示与SMITH同一个部分的所有员工
+/*
+1. 先查询到SMITH的部门号
+2. 把上面的select语句当作一个子查询来使用
+*/
+SELECT deptno 
+	FROM emp
+	WHERE ename = 'SMITH';
+-- 单行子查询
+SELECT * FROM emp
+	WHERE deptno = (
+	SELECT deptno 
+		FROM emp
+		WHERE ename = 'SMITH'	
+	);
+-- 查询和部门10的工作相同的雇员的名字、岗位、工资、部门号，但是不含10号部门自己的员工
+/*
+1. 查询10号部门有哪些工作
+2. 把上面查询的结果当作子查询使用
+*/
+SELECT DISTINCT job FROM emp WHERE deptno = 10; # 10号部门的工作
+-- 多行子查询：IN
+SELECT ename, job, sal, deptno 
+	FROM emp
+	WHERE job IN (SELECT DISTINCT job FROM emp WHERE deptno = 10)
+		AND deptno <> 10;
+
+-- 查询每个部门高于该部门平均工资的员工
+# 将子查询的结果作为一张新表，可以解决很多很多问题
+SELECT deptno, AVG(sal) FROM emp GROUP BY deptno; -- 查询每个部门的员工平均工资
+SELECT ename, job, sal, emp.deptno, avg_sal
+	FROM emp, (SELECT deptno, AVG(sal) AS avg_sal FROM emp GROUP BY deptno) temp -- 新表别名 temp
+	WHERE emp.deptno = temp.deptno AND emp.sal > temp.avg_sal;
+```
+
+- `any` 和 `all` 操作符
+
+```mysql
+# 在多行子拆线呢中使用all和any操作符
+-- 显示工资比部门30的所有员工的工资高的员工的姓名、工资和部门号
+SELECT MAX(sal) FROM emp WHERE deptno = 30;
+-- 使用 max
+SELECT ename, sal, deptno FROM emp WHERE sal > (SELECT MAX(sal) FROM emp WHERE deptno = 30);
+-- 使用 all操作符
+SELECT ename, sal, deptno FROM emp WHERE sal > ALL(SELECT sal FROM emp WHERE deptno = 30);
+-- 显示比30号部门其中的一个员工的工资高的员工的姓名、工资和部门号
+-- 可以使用 any 也可以使用 min
+SELECT ename, sal, deptno FROM emp WHERE sal > ANY(SELECT sal FROM emp WHERE deptno = 30);
+```
+
+- 多列子查询是指查询返回多个列数据的子查询语句
+
+```mysql
+# 多列子查询
+-- 查询与allen的部门和岗位完全相同的所有雇员(并且不包含smithj本人)
+-- (field1, field2...) = (select field1, field2 from ...)
+/*
+1. 得到smith的部门和岗位
+2. 把上面的查询当作子查询来使用，并且使用多列子查询的语法进行匹配
+*/
+SELECT deptno, job FROM emp
+	WHERE ename = 'allen';
+SELECT * FROM emp
+	WHERE (deptno, job) = (
+		SELECT deptno, job 
+		FROM emp
+		WHERE ename = 'allen'
+	) AND ename <> 'allen';
+-- select * from stu
+-- 	where (math, english, chinese) = (
+-- 		select math, english, chinese from stu where `name` = '宋江'
+-- 	) and `name` <> '宋江';
+```
+
+- [多表子查询练习](sql/subquery_exercise.sql)
+
+```mysql
+# 子查询练习
+-- 1. 查询每个部门工资高于本部门平均工资的人的资料
+SELECT AVG(sal) FROM emp 
+	GROUP BY deptno;
+SELECT  emp.deptno, ename, sal, temp.avg_sal
+	FROM emp, (SELECT deptno, AVG(sal) AS avg_sal FROM emp GROUP BY deptno) AS temp
+	WHERE emp.deptno = temp.deptno AND emp.sal > avg_sal;
+-- 2. 查找每个部门工资最高的人的详细资料
+SELECT ename, job, sal, emp.deptno, max_sal
+	FROM emp, (SELECT deptno, MAX(sal) AS max_sal FROM emp GROUP BY deptno) AS tmp
+	WHERE emp.deptno = tmp.deptno AND emp.sal = tmp.max_sal;
+-- 3. 查询每个部门的信息(包括：部门名、编号、地址)和人员数量
+/*
+1. 部门名、编号、地址 来自 dept表
+2. 各个部门的人员数量 -> 构架一个临时表
+*/
+SELECT deptno, COUNT(*) FROM emp GROUP BY deptno; -- 按deptnp分组，查询到每个部门的人数
+SELECT  dept.deptno, dname, loc, emp_num AS '人数'
+	FROM dept, (SELECT deptno, COUNT(*) AS emp_num FROM emp GROUP BY deptno) AS tmp
+	WHERE dept.deptno = tmp.deptno;
+-- 还有一种写法：dept.* 表示将该表所有列都显示出来
+-- 在多表查询时，当多个表的列不重复时，才可以直接写列名
+SELECT  dept.*, emp_num AS '人数'
+	FROM dept, (SELECT deptno, COUNT(*) AS emp_num FROM emp GROUP BY deptno) AS tmp
+	WHERE dept.deptno = tmp.deptno;
+```
+
+### 表复制
+
+- 自我复制数据(蠕虫复制)，有时为了对某个sql语句进行效率测试，需要海量数据时，可以使用此法为表创建海量数据
+- `create table my_tab like emp;`创建与表emp结构相同的表
+- `insert into my_table (select * from my_table)`表自我复制
+
+```mysql
+# 表复制
+CREATE TABLE my_tab01 (
+	id INT,
+	`name` VARCHAR(32),
+	sal DOUBLE,
+	job VARCHAR(32),
+	deptno INT
+	);
+DESC my_tab01;
+SELECT * FROM my_tab01;
+
+-- 演示如何自我复制
+-- 1. 先把 emp表 的记录复制到 my_tab01
+INSERT INTO my_tab01(id, `name`, sal, job, deptno)	-- 不需要写 values
+	(SELECT empno, ename, sal, job, deptno FROM emp);
+-- 2. 自我复制
+INSERT INTO my_tab01
+	SELECT * FROM my_tab01;
+SELECT COUNT(*) FROM my_tab01;
+# 如何删除掉一张表的重复记录
+-- 1. 先创建一张表 my_tab02
+-- 2. 让 my_tab02 有重复的记录
+CREATE TABLE my_tab02 LIKE emp;	-- 表示把 emp表的结构(列)，复制到my_tab02
+DESC my_tab02;
+INSERT INTO my_tab02
+	SELECT * FROM emp;
+SELECT * FROM my_tab02;
+-- 3. 考虑去重
+/* 思路
+1. 先创建一张临时表 my_tmp，该表的结构和 my_tab02 一样
+2. 把 my_tmp 记录，通过distinct关键字处理后，把记录复制到my_tmp;
+3. 删除掉 my_tab02 记录
+4. 把 my_tmp 表的记录复制到 my_tab02
+*/
+CREATE TABLE my_tmp LIKE my_tab02;
+INSERT INTO my_tmp 
+	(SELECT DISTINCT * FROM my_tab02);
+-- 清除掉 my_tab02 记录
+-- delete from my_tab02;
+DROP TABLE my_tab02;	-- 直接删除表
+RENAME TABLE my_tmp TO my_tab02; -- 再改名
+SHOW TABLES;
+SELECT * FROM my_tab02;
+```
+
+### 合并查询
+
+- 有时在实际应用中，为了合并多个 `select` 语句的结果，可以使用集合操作符号 `union`, `union all`
+- `union all`该操作符用于确得两个结果集的并集。当使用该操作符时，不会取消重复行
+- `union` 会去重
+
+```mysql
+# 合并查询
+SELECT ename, job FROM emp WHERE sal > 2500;
+SELECT ename, sal, job FROM emp WHERE job = 'MANAGER';
+-- 1. union all 就是将两个查询结果合并，不会去重
+SELECT ename, sal, job FROM emp WHERE sal > 2500 UNION ALL
+	SELECT ename, sal, job FROM emp WHERE job = 'MANAGER';
+-- 2. union 效果同上，但会去重
+SELECT ename, sal, job FROM emp WHERE sal > 2500 UNION
+	SELECT ename, sal, job FROM emp WHERE job = 'MANAGER';
+```
+
+### mysql表外连接
+
+- ![img_49.png](img_49.png)
+- 外连接
+  - 左外连接：左侧的表完全显示。
+    - `select * from 表1 left join 表2 on 条件`
+    - 表1就是左表，表2就是右表
+  - 右外连接：右侧的表完全显示
+    - `select * from 表1 right join 表2 on 条件`
+    - 表1还是左表，表2还是右表
+
+> 在实际开发中，绝大多数情况下使用的是多表查询内连接即 `select * from emp, dept where ...;` 这种
+
+```mysql
+# 外连接
+-- 列出部分名称和这些部门的员工名称和工作，要求同时显示出那些没有员工的部门
+SELECT dname, ename, job FROM emp, dept
+	WHERE emp.deptno = dept.deptno; -- 这个无法查到没有员工的部门
+
+-- 创建 stu
+CREATE TABLE stu (
+	id INT,
+	`name` VARCHAR(32)
+);
+INSERT INTO stu VALUES (1, 'jack'), (2, 'tom'), (3, 'kiki'), (4, 'vivo');
+SELECT * FROM stu;
+/* 创建 exam
+id grade
+1 56
+2 76
+*/
+CREATE TABLE exam (
+	id INT,
+	grade INT
+);
+INSERT INTO exam VALUES (1, 56), (2, 76), (11, 8);
+SELECT * FROM exam;
+-- 1. 使用左连接，显示所有人的成绩，如果没有成绩，也要显示该人的姓名和id号
+SELECT `name`, stu.id, grade FROM stu, exam
+	WHERE stu.id = exam.id; -- 只会取两张表的交集部分
+-- 改为外连接
+SELECT `name`, stu.id, grade
+	FROM stu LEFT JOIN exam
+	ON stu.id = exam.id;
+-- 2. 使用右连接，显示所有成绩，如果没有匹配的名字，就显示空
+-- 即：右边的表exam和坐标没有匹配的记录，也会把右表的记录显示出来
+SELECT  stu.id, `name`, grade
+	FROM stu RIGHT JOIN exam
+	ON stu.id = exam.id;
+# 显示部门名称和部门的员工信息(名字和工作)，同时列出那些没有员工的部门
+/* 分析
+1. 同时显示那些没有员工的部门，即要求部门信息全部显示
+*/
+SELECT dname, ename, job FROM emp RIGHT JOIN dept
+	ON emp.deptno = dept.deptno; -- 右外连接
+SELECT dname, ename, job FROM dept LEFT JOIN emp
+	ON dept.deptno = emp.deptno; -- 左外连接
+```
+
+## 约束
+
+- 约束用于确保数据库的数据满足特定的业务
+- `primary key`(主键)
+  1. primary key 不可以重复，也不能为空
+  2. 一张表中最多只能有一个主键，但可以是复合主键(比如id+name)
+  3. 主键指定的方式有两种
+      1. 直接在字段名后面指定 field primary key
+      2. 在表定义最后写 primary key (列名);
+  4. 使用 `desc 表名;` 可以查看主键的情况，看到Key列有多个PRI表示的是复合主键
+
+```mysql
+# 主键的使用
+-- id name email
+CREATE TABLE t2 (
+	id INT PRIMARY KEY, -- 表示id列是主键
+	`name` VARCHAR(32),
+	email VARCHAR(32)
+);
+-- 主键列的值不可以重复
+INSERT INTO t2 VALUES (1, 'jack', 'jack@sohu,com'), (2, 'tom', 'tom@sohu,com');
+SELECT * FROM t2;
+INSERT INTO t2 VALUES (1, 'hsp', 'hsp@163.com'); # 错误：Duplicate entry '1' for key 'PRIMARY'
+# 主键使用的细节讨论
+/*
+1. primary key 不可以重复，也不能为空
+2. 一张表中最多只能有一个主键，但可以是复合主键(比如id+name)
+3. 主键指定的方式有两种
+	1. 直接在字段名后面指定 field primary key
+	2. 在表定义最后写 primary key (列名);
+*/
+-- 2) 演示复合主键
+CREATE TABLE t3 (
+	id INT,
+	`name` VARCHAR(32),
+	email VARCHAR(32),
+	PRIMARY KEY (id, `name`) -- 这里就是复合主键
+);
+INSERT INTO t3 VALUES (1, 'jack', 'jack@sohu,com'), (2, 'tom', 'tom@sohu,com');
+INSERT INTO t3 VALUES (1, 'hsp', 'hsp@163.com'); -- 正确：复合主键要求只要不全部相同，就可以添加
+INSERT INTO t3 VALUES (1, 'hsp', 'xxx@163.com'); -- 错误：Duplicate entry '1-hsp' for key 'PRIMARY'
+SELECT * FROM t3;
+-- 3) 指定主键
+CREATE TABLE t4 (
+	id INT,
+	`name` VARCHAR(32),
+	email VARCHAR(32),
+	PRIMARY KEY(id)
+);
+-- 使用desc表名，可以查看primary key的情况
+DESC t3;
+```
+
+- `not null`(非空)
+  - `字段名 字段类型 not null` 则必须为列提供数据
+- `unique`(唯一)
+  - 当定义了唯一约束后，该列值是不能重复的
+  - 注意：当没有指定 `not null` 时，`unique`字段可以有多个 `null`
+  - 一张表可以有多个 `unique` 字段
+
+```mysql
+# unique的使用
+CREATE TABLE t5 (
+	id INT UNIQUE, -- 表示id列是不可以重复的
+	`name` VARCHAR(32),
+	email VARCHAR(32)
+);
+INSERT INTO t5 VALUES (1, 'jack', 'jack@163.com');
+INSERT INTO t5 VALUES (1, 'tom', 'tom@sohu.com'); # 错误：Duplicate entry '1' for key 'id'
+-- unique使用细节
+-- 1. 如果没有指定 not null ，则 unique字段可以有多个null
+INSERT INTO t5 VALUES (NULL, 'kiki', 'kiki@sohu,com');
+INSERT INTO t5 VALUES (NULL, 'lily', 'lily@sohu,com');
+SELECT * FROM t5;
+-- 2. 一张表可以有多个unique字段
+CREATE TABLE t6 (
+	id INT UNIQUE,
+	`name` VARCHAR(32) UNIQUE,
+	email VARCHAR(32)
+);
+```
+
+- `foreign key`(外键)
+  - 用于定义主表和从表之间的关系：外键约束要定义在从表上，主表则必须具有主键约束或是 `unique`约束
+  - 当定义外键约束后，要求外键列数据必须在主表的主键列存在或是为`null`
+  - ![外键示意图](img_50.png)
+  - ![img_51.png](img_51.png)
+- `foreign key (本表字段名) references 主表名(主键名或unique字段名)`
+- 外键细节说明
+  1. 外键指向的表的字段，要求是 `primary key` 或者是 `unique`
+  2. 表的类型是 `innodb`，这样的表才支持外键
+  3. 外键字段的类型要和主键字段的类型一致(长度可以不同)
+  4. 外键字段的值，必须在主键字段出现过，或者为 `null`(前提是外键字段允许为null)
+  5. 一旦建立主外键关系，数据就不能随意删除了。要想删除主键数据，必须保障没有从表的数据指向它
+
+```mysql
+# 外键约束
+-- 创建主表 my_class 
+CREATE TABLE my_class (
+	id INT PRIMARY KEY, -- 班级编号
+	`name` VARCHAR(32) NOT NULL DEFAULT ''
+);
+-- 创建从表 my_stu
+CREATE TABLE my_stu (
+	id INT PRIMARY KEY, -- 学生编号
+	`name` VARCHAR(32) NOT NULL DEFAULT '',
+	class_id INT, -- 学生所在班级编号
+	-- 下面指定外键关系
+	FOREIGN KEY(class_id) REFERENCES my_class(id)
+);
+-- 测试数据
+INSERT INTO my_class VALUES (100, 'Java'), (200, 'Web');
+SELECT * FROM my_class;
+INSERT INTO my_stu VALUES (1, 'jack', 100), (2, 'charlie', 200);
+SELECT * FROM my_stu;
+INSERT INTO my_stu VALUES (3, 'hsp', 300); # 失败，因为300班级不存在
+INSERT INTO my_stu VALUES (4, 'lzc', NULL); # 外键的值可以为null，前提是外键允许为空
+-- 一旦建立外键的关系，数据不能随意删除了
+DELETE FROM my_class WHERE id = 100; # 错误，my_stu表有外键指向它
+```
+
+- `check`：强制行数据必须满足的条件
+- ![check](img_52.png)
+
+```mysql
+# check
+-- mysql5.7目前还不支持check，只做语法校验，但不会生效
+CREATE TABLE t6 (
+	id INT PRIMARY KEY,
+	`name` VARCHAR(32) NOT NULL DEFAULT '',
+	gender CHAR(1) CHECK (gender IN ('男', '女')),
+	sal DOUBLE CHECK (sal > 1000 AND sal < 2000)
+);
+INSERT INTO t6 VALUES (1, 'charlie', '男', 8000); -- sal不符合check但仍会添加成功
+```
+
+<hr/>
+
+```mysql
+# 商品收获系统表设计案例
+CREATE DATABASE IF NOT EXISTS shop_db;
+USE shop_db;
+CREATE TABLE goods (
+	goods_id INT PRIMARY KEY,
+	goods_name VARCHAR(64) NOT NULL DEFAULT '',
+	unitprice DECIMAL(10, 2) NOT NULL CHECK (unitprice >= 1.0 AND unitprice <= 9999.99) ,
+	catagory INT NOT NULL DEFAULT 0,
+	provider VARCHAR(16) NOT NULL DEFAULT ''
+);
+CREATE TABLE customer (
+	customer_id INT PRIMARY KEY,
+	`name` VARCHAR(16) NOT NULL DEFAULT '',
+	address VARCHAR(64) NOT NULL DEFAULT '',
+	email VARCHAR(16) UNIQUE NOT NULL,
+	gender ENUM('男', '女') NOT NULL,
+	card_Id CHAR(18) UNIQUE
+);
+CREATE TABLE purchase (
+	order_id INT UNSIGNED PRIMARY KEY,
+	customer_id INT NOT NULL DEFAULT 0,
+	goods_id INT NOT NULL DEFAULT 0,
+	nums INT NOT NULL DEFAULT 0,
+	-- 指定外键关系
+	FOREIGN KEY (customer_id) REFERENCES customer(customer_id),
+	FOREIGN KEY (goods_id) REFERENCES goods(goods_id)
+);
+
+-- drop table goods;
+-- DROP TABLE customer;
+-- DROP TABLE purchase;
+SHOW TABLES;
+```
+
+P791
