@@ -1456,4 +1456,488 @@ CREATE TABLE purchase (
 SHOW TABLES;
 ```
 
-P791
+### 自增长
+
+- ![img_53.png](img_53.png)
+- 给自增长列数据添加 `null`会自动复制
+- 自增长使用细节
+  1. 一般来说自增长是和 `primary key` 配合使用的
+  2. 自增长也可以单独使用[但是需要配合一个 `unique`]
+  3. 自增长修饰的字段为整数型的(虽然小数也可以但是不推荐使用)
+  4. 自增长默认从1开始，也可以通过命令修改 `alter table 表名 auto_increment = ;`
+  5. 如果添加数据时，给自增长字段指定了值，则以指定值为准。一般不这样来
+
+```mysql
+# 演示自增长的使用
+-- 创建表
+CREATE TABLE t7 (
+	id INT PRIMARY KEY AUTO_INCREMENT,
+	email VARCHAR(32) NOT NULL DEFAULT '',
+	`name` VARCHAR(32) NOT NULL DEFAULT ''
+);
+DESC t7;
+-- 测试自增长的使用
+INSERT INTO t7 
+	VALUES (NULL, 'tom@qq.com', 'tom');
+INSERT INTO t7 (email, `name`) VALUES ('lzc@163.com', 'lzc');
+SELECT * FROM t7;
+
+-- 修改默认的自增长开始值
+CREATE TABLE t8 (
+	id INT PRIMARY KEY AUTO_INCREMENT,
+	email VARCHAR(32) NOT NULL DEFAULT '',
+	`name` VARCHAR(32) NOT NULL DEFAULT ''
+);
+ALTER TABLE t8 AUTO_INCREMENT = 100; -- 设置自增长的起始值
+INSERT INTO t8 VALUES (NULL, 'tom@qq.com', 'tom');
+# 如果指定自增长字段的值，则其值按照指定值来
+INSERT INTO t8 VALUES (12, 'kiki@qq.com', 'kiki'); -- 12
+-- 自增长从该列最大值开始
+INSERT INTO t8 VALUES (NULL, 'vivo@qq.com', 'vivo'); -- 101
+SELECT * FROM t8;
+```
+
+## 索引
+
+- 创建索引后，只会对创建索引列查询速度变快，通过其它列查询不会变化
+
+```mysql
+# 索引
+-- 创建测试数据库库 tmp
+CREATE DATABASE tmp;
+USE tmp;
+CREATE TABLE dept( /*部门表*/
+deptno MEDIUMINT   UNSIGNED  NOT NULL  DEFAULT 0,
+dname VARCHAR(20)  NOT NULL  DEFAULT "",
+loc VARCHAR(13) NOT NULL DEFAULT ""
+);
+
+#创建表EMP雇员
+CREATE TABLE emp
+(empno  MEDIUMINT UNSIGNED  NOT NULL  DEFAULT 0, /*编号*/
+ename VARCHAR(20) NOT NULL DEFAULT "", /*名字*/
+job VARCHAR(9) NOT NULL DEFAULT "",/*工作*/
+mgr MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,/*上级编号*/
+hiredate DATE NOT NULL,/*入职时间*/
+sal DECIMAL(7,2)  NOT NULL,/*薪水*/
+comm DECIMAL(7,2) NOT NULL,/*红利*/
+deptno MEDIUMINT UNSIGNED NOT NULL DEFAULT 0 /*部门编号*/
+) ;
+
+#工资级别表
+CREATE TABLE salgrade
+(
+grade MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+losal DECIMAL(17,2)  NOT NULL,
+hisal DECIMAL(17,2)  NOT NULL
+);
+
+#测试数据
+INSERT INTO salgrade VALUES (1,700,1200);
+INSERT INTO salgrade VALUES (2,1201,1400);
+INSERT INTO salgrade VALUES (3,1401,2000);
+INSERT INTO salgrade VALUES (4,2001,3000);
+INSERT INTO salgrade VALUES (5,3001,9999);
+
+DELIMITER $$
+
+#创建一个函数，名字 rand_string，可以随机返回我指定的个数字符串
+CREATE FUNCTION rand_string(n INT)
+RETURNS VARCHAR(255) #该函数会返回一个字符串
+BEGIN
+#定义了一个变量 chars_str， 类型  varchar(100)
+#默认给 chars_str 初始值   'abcdefghijklmnopqrstuvwxyzABCDEFJHIJKLMNOPQRSTUVWXYZ'
+ DECLARE chars_str VARCHAR(100) DEFAULT
+   'abcdefghijklmnopqrstuvwxyzABCDEFJHIJKLMNOPQRSTUVWXYZ'; 
+ DECLARE return_str VARCHAR(255) DEFAULT '';
+ DECLARE i INT DEFAULT 0; 
+ WHILE i < n DO
+    # concat 函数 : 连接函数mysql函数
+   SET return_str =CONCAT(return_str,SUBSTRING(chars_str,FLOOR(1+RAND()*52),1));
+   SET i = i + 1;
+   END WHILE;
+  RETURN return_str;
+  END $$
+
+
+ #这里我们又自定了一个函数,返回一个随机的部门号
+CREATE FUNCTION rand_num( )
+RETURNS INT(5)
+BEGIN
+DECLARE i INT DEFAULT 0;
+SET i = FLOOR(10+RAND()*500);
+RETURN i;
+END $$
+
+ #创建一个存储过程， 可以添加雇员
+CREATE PROCEDURE insert_emp(IN START INT(10),IN max_num INT(10))
+BEGIN
+DECLARE i INT DEFAULT 0;
+# set autocommit =0 把autocommit设置成0
+ # autocommit = 0 含义: 不要自动提交
+ SET autocommit = 0; #默认不提交sql语句
+ REPEAT
+ SET i = i + 1;
+ #通过前面写的函数随机产生字符串和部门编号，然后加入到emp表
+ INSERT INTO emp VALUES ((START+i) ,rand_string(6),'SALESMAN',0001,CURDATE(),2000,400,rand_num());
+  UNTIL i = max_num
+ END REPEAT;
+ # commit整体提交所有sql语句，提高效率
+   COMMIT;
+ END $$
+
+ #添加8000000数据
+CALL insert_emp(100001,8000000)$$
+
+#命令结束符，再重新设置为;
+DELIMITER ;
+
+SELECT COUNT(*) FROM emp; -- 8000000行
+-- 没有创建索引前，查询速度
+SELECT * FROM emp WHERE empno = 123456; -- 3.17s
+-- 在没有创建索引前，emp.ibd大小为524,288KB
+-- 创建索引后，大小为655.360KB
+/*
+empno_index 索引名称
+on emp (empno) 表示在emp表的empno列创建索引
+*/
+CREATE INDEX empno_index ON emp(empno);
+-- 创建索引后，查询速度
+SELECT * FROM emp WHERE empno = 123457; -- 0s
+
+# 创建索引后，只对创建了索引的列有效
+SELECT * FROM emp WHERE ename = 'ZFdBwF'; -- 3.25s
+```
+
+- 索引的原理
+  - ![img_54.png](img_54.png)
+  - 当没有索引，会进行**全表扫描**，查询速度慢
+  - 当创建索引后，会对索引列**创建二叉树索引**，查询变快
+- 索引的代价
+  1. 磁盘占用
+  2. 对表进行 `dml(update, delete, insert)` 操作，会对索引进行维护，影响到dml效率
+
+- 索引类型
+  1. 主键索引，主键自动的为主索引(类型 primary key)
+  2. 唯一索引(unique)
+  3. 普通索引(index)
+  4. 全文索引(FULLTEXT)，适用于MyISAM。一般开发中不适用mysql自带的全文索引，而是使用：全文搜索 `Solr` 和 `ElasticSearch(ES)`
+
+```mysql
+create table t1 (
+    id int primary key, -- 主键，同时也是索引，称为主键索引
+    name varchar(32),
+    email varchar(32) unique -- email是唯一的，同时也是索引，称为unique索引
+);
+```
+
+- 小结：哪些列上适合使用索引
+1. 较频繁的作为查询条件的字段应该创建索引
+2. 唯一性太差的字段不适合单独创建索引，即使频繁作为查询的条件
+3. 更新非常频繁的字段不适合创建索引
+4. 不会出现在 `where` 子句中字段不该创建索引
+
+```mysql
+# 演示mysql的索引使用
+USE db01;
+CREATE TABLE t9 (
+	id INT,
+	`name` VARCHAR(32)
+);
+-- 查询表是否有索引
+SHOW INDEXES FROM t9;
+-- 添加索引
+-- 添加唯一索引
+CREATE UNIQUE INDEX id_index ON t9(id);
+-- 添加普通索引1
+CREATE INDEX id_index ON t9(id);
+/* 如何选择
+- 如果某列的值是不会重复的，则优先考虑使用unique索引，否则使用普通索引
+*/
+-- 添加普通索引方式2
+ALTER TABLE t9 ADD INDEX id_index (id);
+
+-- 添加主键索引
+-- 1. 创建表时指定 primary key
+-- 2. 创建表后指定
+ALTER TABLE t9 ADD PRIMARY KEY (id);
+
+-- 删除索引
+DROP INDEX id_index ON t9;
+
+-- 删除主键索引
+ALTER TABLE t9 DROP PRIMARY KEY;
+
+-- 修改索引，先删除，再添加新的索引
+
+-- 查询索引
+-- 1. 方式1
+SHOW INDEX FROM t9;
+-- 2. 方式2
+SHOW INDEXES FROM t9;
+-- 3. 方式3
+SHOW KEYS FROM t9;
+-- 4. 方式4
+DESC t9;
+
+
+# 练习
+-- 方式1
+CREATE TABLE t10 (
+	id INT PRIMARY KEY,
+	goods_name VARCHAR(32),
+	customer VARCHAR(32)
+);
+-- 方式2
+CREATE TABLE t11 (
+	id INT,
+	goods_name VARCHAR(32),
+	customer VARCHAR(32)
+);
+ALTER TABLE t11 ADD PRIMARY KEY (id);
+```
+
+## 事务
+
+### 事务操作
+
+- 事务：用于保证数据的一致性，它由**一组相关的dml语句组成**，该组dml语句要么全部成功。要么全部失败。
+    如：转账就要用事务来处理，用以保证数据的一致性。
+- 当执行事务操作时(dml语句)，mysql会在表上**加锁**，防止其它用户改表的数据，这对用户来说非常重要。
+- ![事务](img_55.png)
+- ![事务操作示意图](img_56.png)
+- ![img_57.png](img_57.png)
+
+```mysql
+# 事务的一个重要概念和具体操作
+DROP TABLE t10;
+-- 1. 创建一张测试表
+CREATE TABLE t10 (
+	id INT,
+	`name` VARCHAR(32)
+);
+-- 2. 开始事务
+START TRANSACTION;
+-- 3. 设置保存点
+SAVEPOINT a;
+-- 指定dml操作
+INSERT INTO t10 VALUES (1, 'tom');
+SAVEPOINT b;
+-- 执行dml操作
+INSERT INTO t10 VALUES (2, 'charlie');
+
+-- 回退到b
+ROLLBACK TO b;
+-- 回退到a
+ROLLBACK TO a;
+# 查询
+SELECT * FROM t10;
+-- 如果这样写，表示直接回退到事务开始的状态
+ROLLBACK;
+```
+
+- 事务的使用细节
+
+```mysql
+# 事务使用细节
+-- 1. 如果不开启事务，默认情况下，dml操作时自动提交的，不能回滚
+INSERT INTO t10 VALUES (1, 'charlie');
+SELECT * FROM t10;
+-- 2. 如果开启一个事务，没有创建保存点，可以执行rollback
+-- 默认就是回退到事务开始的状态
+START TRANSACTION;
+INSERT INTO t10 VALUES (2, 'tom');
+INSERT INTO t10 VALUES (3, 'hsp');
+ROLLBACK; -- 表示直接回退到事务开始的状态
+-- 3. 可以在事务还没提交时，创建多个保存点
+-- 4. 可以在事务没有提交前，选择回退到那个保存点
+-- 5. mysql需要使用InnoDB引擎才能使用事务，MyISAM不支持
+-- 6. 开始一个事务 start transaction; set autocommit=off;
+-- set autocommit=off;
+```
+
+### 隔离级别
+
+- 事务的隔离级别
+1. 多个连接开启各自事务操作数据库中数据时，数据库系统要负责隔离操作，以保证各个连接在获取数据时的准确性。
+2. **脏读**(dirty read):**当一个事务读取另一个事务尚未提交的修改时**，产生脏读
+3. **不可重复读**(non-repeatable read):同一查询在同一事务中多次进行，由于其它提交事务所做的**修改或删除**，每次返回不同的结果集，
+   此时发生不可重复读。
+4. **幻读**(phantom read):同一查询在同一事务中多次进行，由于其它提交事务所做的**插入操作**，每次返回不同的结果集，称为幻读
+
+- 事务隔离级别：Mysql隔离级别定义了事务与事务之间的隔离成都
+- ![Mysql隔离级别](img_58.png)
+- ![img_59.png](img_59.png)
+
+- 事务的(acid)特性
+- ![img_60.png](img_60.png)
+
+### 存储引擎
+
+- ![img_61.png](img_61.png)
+- `show engines;`
+  - ![img_62.png](img_62.png)
+- ![img_63.png](img_63.png)
+- ![img_64.png](img_64.png)
+- ![img_65.png](img_65.png)
+
+```mysql
+# 表类型和存储引擎
+-- 查看所有的存储引擎
+SHOW ENGINES;
+-- innodb存储引擎
+-- 1.支持事务 2.支持外键 3.支持行级锁
+
+-- myisam存储引擎
+CREATE TABLE t13 (
+	id INT,
+	`name` VARCHAR(32)
+) ENGINE MYISAM;
+-- 1. 添加速度块2.不支持事务和外键3.支持表级锁
+START TRANSACTION;
+SAVEPOINT t1;
+INSERT INTO t13 VALUES (1, 'hsp');
+SELECT * FROM t13;
+ROLLBACK TO t1; -- 警告，不支持事务
+
+-- memory 存储引擎
+-- 1. 数据存储在内存中 2. 执行速度块(没有IO读写) 3.默认支持索引(hash表)
+CREATE TABLE t14 (
+	id INT,
+	`name` VARCHAR(32)
+) ENGINE MEMORY;
+INSERT INTO t14 VALUES (1, 'tom'), (2, 'jack'), (3, 'charlie');
+SELECT * FROM t14;
+```
+
+## 视图
+
+- 试图(view)
+  1. 视图是一个虚拟表，其内容由查询定义。同真实的表一样，视图包含列，其数据来自对应的真实表(基表)
+  2. 通过视图可以修改基表的数据，同样，基表的变化也会影响视图的数据
+- ![视图](img_66.png)
+- ![视图的基本使用](img_67.png)
+- 
+
+
+```mysql
+# 视图的使用
+-- 创建一个视图 emp_view01
+CREATE VIEW emp_view01 AS 
+	SELECT empno, ename, job, deptno FROM emp;
+-- 查看视图
+DESC emp_view01;
+SELECT * FROM emp_view01;
+-- 修改视图
+-- alter view emp_view01 as select ...; -- 更新成新的视图
+-- 查看创建视图的指令
+SHOW CREATE VIEW emp_view01;
+-- 删除视图
+DROP VIEW emp_view01;
+
+# 视图的细节讨论
+-- 1. 创建视图后，到数据库查看，对应视图只有一个视图结构文件(形式：视图名.frm)
+-- 2. 视图的数据变化会影响到基表，同时基表数据的变化也会影响到视图
+UPDATE emp_view01 SET job = 'MANAGER' WHERE empno = 7369;
+SELECT * FROM emp WHERE empno = 7369;
+UPDATE emp SET job = 'SALESMAN' WHERE empno = 7369;
+SELECT * FROM emp_view01 WHERE empno = 7369;
+-- 3. 视图中可以再使用视图，比如从 emp_view01 视图中，选出 empno 和 ename 做出新视图
+CREATE VIEW emp_view02 AS SELECT empno, ename FROM emp_view01;
+SELECT * FROM emp_view02;
+```
+
+- 视图最佳实践
+  - ![img_68.png](img_68.png)
+
+```mysql
+# 视图练习
+-- 针对emp,dept和salgrade三张表，创建一个视图 emp_view03
+-- 可以显示雇员编号，雇员名，雇员部门名称和薪水级别
+SELECT DISTINCT empno, ename, dname, grade FROM emp, dept, salgrade
+	WHERE emp.deptno = dept.deptno AND (sal BETWEEN losal AND hisal);
+-- 将得到的表，构建成视图
+CREATE VIEW my_emp03 AS
+	SELECT DISTINCT empno, ename, dname, grade FROM emp, dept, salgrade
+	WHERE emp.deptno = dept.deptno AND (sal BETWEEN losal AND hisal);
+SELECT * FROM my_emp03;
+```
+
+## Mysql管理
+
+Mysql中的用户，都存储再系统数据库 `mysql` 中的 `user` 表中
+- ![img_69.png](img_69.png)
+- ![img_70.png](img_70.png)
+
+```mysql
+# mysql用户管理
+--  当做项目开发时，可以根据不同的开发人员，赋给他相应的Mysql操作权限
+-- 所以，mysql数据库管理人员(root)，根据需求创建不同的用户，设置相应的权限
+-- 1. 创建新用户
+/*
+1. 'charlie@localhost' 表示用户的完整信息 charlie用户名 localhost登录的IP
+2. 123456密码，存放再mysql.user表的是经过 password('123456')加密后的
+*/
+CREATE USER 'charlie'@'localhost' IDENTIFIED BY '123456';
+SELECT * FROM mysql.user;
+DELETE FROM mysql.user WHERE `user` = 'charlie';
+
+SELECT `host`, `user`, `authentication_string` FROM mysql.user;
+-- 2. 删除用户
+DROP USER 'charlie'@'localhost';
+-- 1. 登录用户，
+/*
+不同的数据库用户，操作的库和表不相同
+不同的数据库用户，登录到DBMS后，根据相应的权限，可以操作的数据库和数据对象(表，视图，触发器)不一样
+*/
+
+-- 4. 修改密码
+SET PASSWORD = PASSWORD('abcdef');
+-- 修改其他人的密码，需要权限
+SET PASSWORD FOR 'root'@'localhost' = PASSWORD('123456');
+```
+
+Mysql权限管理
+- `grant 权限列表 on 库.对象名 to '用户名'@'登录位置' [identified by '密码']`
+- ![img_71.png](img_71.png)
+- ![img_72.png](img_72.png)
+
+```mysql
+# 用户权限管理
+CREATE USER 'hsp'@'localhost' IDENTIFIED BY '123';
+-- 使用root用户创建testdb，表news
+CREATE DATABASE IF NOT EXISTS testdb;
+CREATE TABLE news (
+	id INT,
+	content VARCHAR(32)
+);
+-- 添加一条测试数据
+INSERT INTO news VALUES (100, '联合早报');
+SELECT * FROM news;
+-- 给hsp用户 分配查看 news 表和 添加news的权限
+GRANT SELECT, INSERT ON testdb.news TO 'hsp'@'localhost';
+-- 修改hsp密码
+SET PASSWORD FOR 'hsp'@'localhost' = '123456';
+-- 回收hsp用户在testdb.news表的所有权限
+REVOKE SELECT, UPDATE, INSERT ON testdb.news FROM 'hsp'@'localhost';
+
+-- 删除用户hsp
+DROP USER 'hsp'@'localhost';
+SELECT * FROM mysql.user;
+```
+
+- mysql用户管理细节
+  - ![img_73.png](img_73.png)
+
+```mysql
+# 用户管理细节
+-- 不指定登录IP，则为%，表示所有IP都有连接权限
+CREATE USER 'hsp';
+SELECT `host`, `user` FROM mysql.user;
+-- 指定IP字段
+-- '192.168.1.%'表示xxx与在192.168.1.*的ip都可以登录
+CREATE USER 'jack'@'192.168.1.%';
+-- 在删除用户时，如果host不是%，需要明确指定 '用户名'@'host值'
+DROP USER hsp; -- 默认就是 drop user 'hsp'@'%'
+DROP USER 'charlie'@'localhost';
+```
