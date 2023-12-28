@@ -1941,3 +1941,4 @@ CREATE USER 'jack'@'192.168.1.%';
 DROP USER hsp; -- 默认就是 drop user 'hsp'@'%'
 DROP USER 'charlie'@'localhost';
 ```
+[Mysql练习](./sql/mysql_homework.sql)
