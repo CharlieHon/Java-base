@@ -1,0 +1,22 @@
+# JDBC事务
+CREATE TABLE `account` (
+	id INT PRIMARY KEY AUTO_INCREMENT,
+	`name` VARCHAR(32) NOT NULL DEFAULT '',
+	balance DOUBLE NOT NULL DEFAULT 0
+) CHARSET utf8;
+
+INSERT INTO `account` VALUES (NULL, '马云', 3000), (NULL, '马化腾', 10000);
+
+SELECT * FROM `account`;
+
+
+-- 测试表2
+CREATE TABLE admin2 (
+	id INT PRIMARY KEY AUTO_INCREMENT,
+	username VARCHAR(32) NOT NULL,
+	`password` VARCHAR(32) NOT NULL
+);
+SELECT * FROM admin2;
+SELECT COUNT(*) FROM admin2;
+DELETE FROM admin2;
+DROP TABLE admin2;
