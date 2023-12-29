@@ -13,20 +13,20 @@
 # 注意：-p和密码之间不空格，或者输入到-p直接回车，再进行密码验证
 ```
 
-- ![操作示意图](img_2.png)
+- ![操作示意图](imgs/img_2.png)
 - 使用 `netstat -abn` 查看服务及监听端口
-- ![netstat -abn](img.png)
-- ![mysql](img_1.png)
+- ![netstat -abn](imgs/img.png)
+- ![mysql](imgs/img_1.png)
 
 ## 数据库三层结构
 
 1. 所谓安装Mysql数据库，就是在主机上安装一个数据库管理系统(database manage system, DBMS)，这个管理程序可以管理多个数据库
 2. 一个数据库中可以创建多个表，以保存数据(信息)
 3. 数据库管理系统(DBMS)、数据库和表的关系如下图所示：
-   - ![Mysql三层结构](img_3.png)
+   - ![Mysql三层结构](imgs/img_3.png)
    - Mysql数据库-普通表的本质仍然是**文件**
 4. 数据在数据库中的存储方式
-   - ![img_4.png](img_4.png)
+   - ![img_4.png](imgs/img_4.png)
    - 表的一行称之为一条记录
    - 在java程序中，一行记录往往使用对象表示
 5. SQL语句分类
@@ -39,7 +39,7 @@
 
 ### 创建数据库
 
-- ![创建数据库](img_5.png)
+- ![创建数据库](imgs/img_5.png)
   1. `CHARACTER SET`：指定数据库采样的字符集，如果不指定字符集，默认 `utf8`
   2. `COLLATE`：指定数据库字符集的校对规则
      1. `utf8_bin`：区分大小写
@@ -57,14 +57,14 @@ CREATE DATABASE hsp_db02 CHARACTER SET utf8 COLLATE utf8_bin;
 SELECT * FROM t1 WHERE NAME = 'tom';
 ```
 
-- ![表数据](img_6.png)
+- ![表数据](imgs/img_6.png)
 - 以上查询语句，对于 `hsp_db01` 和 `hsp_db02` 的执行结果分别如下：
-  - ![db01](img_7.png)
-  - ![db02](img_8.png)
+  - ![db01](imgs/img_7.png)
+  - ![db02](imgs/img_8.png)
 
 ### 查看、删除数据库
 
-- ![img_9.png](img_9.png)
+- ![img_9.png](imgs/img_9.png)
 
 ```mysql
 # 演示删除和查询数据库
@@ -80,7 +80,7 @@ DROP DATABASE IF EXISTS hsp_db01;
 
 ### 备份和恢复数据库
 
-- ![备份和恢复数据库](img_10.png)
+- ![备份和恢复数据库](imgs/img_10.png)
 
 ```mysql
 # 备份和恢复数据库
@@ -138,7 +138,7 @@ mysql> source d:\\bak.sql
 
 ### 创建表
 
-- ![创建表](img_11.png)
+- ![创建表](imgs/img_11.png)
 
 ```mysql
 # 创建表
@@ -152,7 +152,7 @@ CREATE TABLE `user` (
 
 ### Mysql常用数据类型(列类型)
 
-- ![Mysql数据类型](img_12.png)
+- ![Mysql数据类型](imgs/img_12.png)
 1. 数值类型
     - 整型
       - `tinyint[1个字节]`
@@ -182,7 +182,7 @@ CREATE TABLE `user` (
 
 - 数值型(整数)的基本使用
 1. 说明：在能满足需求的情况下，尽量选择占用空间小的类型
-2. ![整型](img_13.png)
+2. ![整型](imgs/img_13.png)
 
 ```mysql
 # 演示整型使用
@@ -223,8 +223,8 @@ SELECT * FROM t4 WHERE num = 255;
 ```
 
 - 数值型(小数类型)
-- ![小数类型](img_14.png)
-- ![数据保存结果](img_15.png)
+- ![小数类型](imgs/img_14.png)
+- ![数据保存结果](imgs/img_15.png)
 
 ```mysql
 # 演示decimal类型、float、double使用
@@ -240,9 +240,9 @@ SELECT * FROM t5;
 ```
 
 - 字符串
-- ![字符串](img_16.png)
-- ![img_17.png](img_17.png)
-- ![img_18.png](img_18.png)
+- ![字符串](imgs/img_16.png)
+- ![img_17.png](imgs/img_17.png)
+- ![img_18.png](imgs/img_18.png)
 
 ```mysql
 # 演示字符串类型使用 char varchar
@@ -299,8 +299,8 @@ SELECT * FROM t8;
 ```
 
 - 日期类型的基本使用
-- ![img_19.png](img_19.png)
-- ![img_20.png](img_20.png)
+- ![img_19.png](imgs/img_19.png)
+- ![img_20.png](imgs/img_20.png)
 
 ```mysql
 # 演示事件相关的类型
@@ -321,7 +321,7 @@ INSERT INTO t9(birthday, jobtime)
 
 ### 修改表
 
-- ![img_21.png](img_21.png)
+- ![img_21.png](imgs/img_21.png)
 
 <hr/>
 
@@ -378,7 +378,7 @@ ALTER TABLE employee CHANGE `name` use_name VARCHAR(32) NOT NULL DEFAULT '';
 4. Select语句-查找数据
 
 - `insert`语句
-- ![img_22.png](img_22.png)
+- ![img_22.png](imgs/img_22.png)
 
 ```mysql
 -- 练习insert语句
@@ -424,8 +424,8 @@ INSERT INTO goods (id, good_name)
 ```
 
 - `update`语句
-- ![img_23.png](img_23.png)
-- ![img_25.png](img_25.png)
+- ![img_23.png](imgs/img_23.png)
+- ![img_25.png](imgs/img_25.png)
 
 ```mysql
 # 演示update
@@ -453,7 +453,7 @@ UPDATE employee SET salary = salary + 1000, job = '起义' WHERE user_name = '�
 ```
 
 - `delete`语句
-- ![img_24.png](img_24.png)
+- ![img_24.png](imgs/img_24.png)
 
 ```mysql
 # delete 语句演示
@@ -472,10 +472,10 @@ DROP TABLE employee;
 ```
 
 - `select`语句
-- ![select](img_26.png)
-- ![img_27.png](img_27.png)
-- ![where条件运算符](img_28.png)
-- ![order by](img_29.png)
+- ![select](imgs/img_26.png)
+- ![img_27.png](imgs/img_27.png)
+- ![where条件运算符](imgs/img_28.png)
+- ![order by](imgs/img_29.png)
 
 ```mysql
 # select 语句[重点，难点]
@@ -552,13 +552,13 @@ SELECT `name`, (chinese+math+english) AS total_score FROM student
 ### 统计相关函数
 
 - `count`返回行的总数
-  - ![count](img_30.png)
+  - ![count](imgs/img_30.png)
 - `sum`返回满足`where`条件的行的和，一般使用在数值列
-  - ![sum](img_31.png)
+  - ![sum](imgs/img_31.png)
 - `avg`函数返回满足`where`条件的一列的平均值
-  - ![avg](img_32.png)
+  - ![avg](imgs/img_32.png)
 - `max/min`返回满足`where`条件的一列的最大/最小值
-  - ![max/min](img_33.png)
+  - ![max/min](imgs/img_33.png)
 
 ```mysql
 # 演示mysql的统计函数的使用
@@ -603,10 +603,10 @@ SELECT MAX(chinese), MIN(chinese) FROM student;
 ```
 
 - `group by`对列进行分组
-  - ![group by](img_34.png)
+  - ![group by](imgs/img_34.png)
   - group by用于对查询的结果分组统计
 - `having`对分组后的结果进行过滤
-  - ![having](img_35.png)
+  - ![having](imgs/img_35.png)
   - having子句用于限制分组显示结果
  
 ```mysql
@@ -684,7 +684,7 @@ SELECT deptno, AVG(sal) AS avg_sal FROM emp GROUP BY deptno HAVING avg_sal < 200
 
 ### 字符串相关函数
 
-- ![字符串相关函数](img_36.png)
+- ![字符串相关函数](imgs/img_36.png)
 
 ```mysql
 # 演示 字符串相关函数
@@ -727,7 +727,7 @@ SELECT CONCAT(LCASE(LEFT(ename, 1)), SUBSTRING(ename, 2)) AS name2 FROM emp;
 
 ### 数学相关函数
 
-- ![math](img_37.png)
+- ![math](imgs/img_37.png)
 
 ```mysql
 # 演示数学相关函数
@@ -763,9 +763,9 @@ SELECT RAND(2) FROM DUAL;
 
 ### 时间日期相关函数
 
-- ![img_38.png](img_38.png)
+- ![img_38.png](imgs/img_38.png)
 
-| ![img_39.png](img_39.png) | ![img_40.png](img_40.png) | ![img_41.png](img_41.png) |
+| ![img_39.png](imgs/img_39.png) | ![img_40.png](imgs/img_40.png) | ![img_41.png](imgs/img_41.png) |
 |---------------------------|---------------------------|---------------------------|
 
 ```mysql
@@ -816,7 +816,7 @@ SELECT FROM_UNIXTIME(UNIX_TIMESTAMP(), '%Y-%m-%d %H:%i:%s') FROM DUAL;
 
 ### 加密函数和系统函数
 
-- ![img_42.png](img_42.png)
+- ![img_42.png](imgs/img_42.png)
 
 ```mysql
 # 演示加密函数和系统函数
@@ -849,7 +849,7 @@ SELECT * FROM mysql.user WHERE `user` = 'root';
 
 ### 流程控制函数
 
-- ![img_43.png](img_43.png)
+- ![img_43.png](imgs/img_43.png)
 
 ```mysql
 # 演示流程控制语句
@@ -904,7 +904,7 @@ SELECT * FROM emp ORDER BY sal ASC;
 SELECT * FROM emp ORDER BY deptno ASC, sal DESC;
 ```
 
-- ![img_44.png](img_44.png)
+- ![img_44.png](imgs/img_44.png)
 - 推导公式：`select * from table_name order by empno limit (页数-1)*每页行数, 每页行数`
 
 ```mysql
@@ -934,7 +934,7 @@ SELECT * FROM emp ORDER BY empno DESC LIMIT 10, 5;
 SELECT * FROM emp ORDER BY empno DESC LIMIT 20, 5;
 ```
 
-- ![img_45.png](img_45.png)
+- ![img_45.png](imgs/img_45.png)
 - 
 - `select deptno, avg(sal) as avg_sal from emp group by deptno having avg_sal > 1000 order by avg_sal desc limit 0, 2;`
     1. `group by`
@@ -987,11 +987,11 @@ SELECT deptno, COUNT(job) FROM emp GROUP BY deptno;
     2. 共返回：第1张表行数*第2张表行数，即13 * 4
     3. 这样多表查询默认处理方式，称为**笛卡尔积**
     4. 解决多表的关键就是写出正确的过滤条件 `where`，需要进行分析
-  - ![img_46.png](img_46.png)
+  - ![img_46.png](imgs/img_46.png)
 - `select * from emp;`
-  - ![img_47.png](img_47.png)
+  - ![img_47.png](imgs/img_47.png)
 - `select * from dept;`
-  - ![img_48.png](img_48.png)
+  - ![img_48.png](imgs/img_48.png)
 
 ```mysql
 # 多表查询
@@ -1226,7 +1226,7 @@ SELECT ename, sal, job FROM emp WHERE sal > 2500 UNION
 
 ### mysql表外连接
 
-- ![img_49.png](img_49.png)
+- ![img_49.png](imgs/img_49.png)
 - 外连接
   - 左外连接：左侧的表完全显示。
     - `select * from 表1 left join 表2 on 条件`
@@ -1368,8 +1368,8 @@ CREATE TABLE t6 (
 - `foreign key`(外键)
   - 用于定义主表和从表之间的关系：外键约束要定义在从表上，主表则必须具有主键约束或是 `unique`约束
   - 当定义外键约束后，要求外键列数据必须在主表的主键列存在或是为`null`
-  - ![外键示意图](img_50.png)
-  - ![img_51.png](img_51.png)
+  - ![外键示意图](imgs/img_50.png)
+  - ![img_51.png](imgs/img_51.png)
 - `foreign key (本表字段名) references 主表名(主键名或unique字段名)`
 - 外键细节说明
   1. 外键指向的表的字段，要求是 `primary key` 或者是 `unique`
@@ -1405,7 +1405,7 @@ DELETE FROM my_class WHERE id = 100; # 错误，my_stu表有外键指向它
 ```
 
 - `check`：强制行数据必须满足的条件
-- ![check](img_52.png)
+- ![check](imgs/img_52.png)
 
 ```mysql
 # check
@@ -1458,7 +1458,7 @@ SHOW TABLES;
 
 ### 自增长
 
-- ![img_53.png](img_53.png)
+- ![img_53.png](imgs/img_53.png)
 - 给自增长列数据添加 `null`会自动复制
 - 自增长使用细节
   1. 一般来说自增长是和 `primary key` 配合使用的
@@ -1610,7 +1610,7 @@ SELECT * FROM emp WHERE ename = 'ZFdBwF'; -- 3.25s
 ```
 
 - 索引的原理
-  - ![img_54.png](img_54.png)
+  - ![img_54.png](imgs/img_54.png)
   - 当没有索引，会进行**全表扫描**，查询速度慢
   - 当创建索引后，会对索引列**创建二叉树索引**，查询变快
 - 索引的代价
@@ -1704,9 +1704,9 @@ ALTER TABLE t11 ADD PRIMARY KEY (id);
 - 事务：用于保证数据的一致性，它由**一组相关的dml语句组成**，该组dml语句要么全部成功。要么全部失败。
     如：转账就要用事务来处理，用以保证数据的一致性。
 - 当执行事务操作时(dml语句)，mysql会在表上**加锁**，防止其它用户改表的数据，这对用户来说非常重要。
-- ![事务](img_55.png)
-- ![事务操作示意图](img_56.png)
-- ![img_57.png](img_57.png)
+- ![事务](imgs/img_55.png)
+- ![事务操作示意图](imgs/img_56.png)
+- ![img_57.png](imgs/img_57.png)
 
 ```mysql
 # 事务的一个重要概念和具体操作
@@ -1766,20 +1766,20 @@ ROLLBACK; -- 表示直接回退到事务开始的状态
 4. **幻读**(phantom read):同一查询在同一事务中多次进行，由于其它提交事务所做的**插入操作**，每次返回不同的结果集，称为幻读
 
 - 事务隔离级别：Mysql隔离级别定义了事务与事务之间的隔离成都
-- ![Mysql隔离级别](img_58.png)
-- ![img_59.png](img_59.png)
+- ![Mysql隔离级别](imgs/img_58.png)
+- ![img_59.png](imgs/img_59.png)
 
 - 事务的(acid)特性
-- ![img_60.png](img_60.png)
+- ![img_60.png](imgs/img_60.png)
 
 ### 存储引擎
 
-- ![img_61.png](img_61.png)
+- ![img_61.png](imgs/img_61.png)
 - `show engines;`
-  - ![img_62.png](img_62.png)
-- ![img_63.png](img_63.png)
-- ![img_64.png](img_64.png)
-- ![img_65.png](img_65.png)
+  - ![img_62.png](imgs/img_62.png)
+- ![img_63.png](imgs/img_63.png)
+- ![img_64.png](imgs/img_64.png)
+- ![img_65.png](imgs/img_65.png)
 
 ```mysql
 # 表类型和存储引擎
@@ -1815,8 +1815,8 @@ SELECT * FROM t14;
 - 试图(view)
   1. 视图是一个虚拟表，其内容由查询定义。同真实的表一样，视图包含列，其数据来自对应的真实表(基表)
   2. 通过视图可以修改基表的数据，同样，基表的变化也会影响视图的数据
-- ![视图](img_66.png)
-- ![视图的基本使用](img_67.png)
+- ![视图](imgs/img_66.png)
+- ![视图的基本使用](imgs/img_67.png)
 - 
 
 
@@ -1848,7 +1848,7 @@ SELECT * FROM emp_view02;
 ```
 
 - 视图最佳实践
-  - ![img_68.png](img_68.png)
+  - ![img_68.png](imgs/img_68.png)
 
 ```mysql
 # 视图练习
@@ -1866,8 +1866,8 @@ SELECT * FROM my_emp03;
 ## Mysql管理
 
 Mysql中的用户，都存储再系统数据库 `mysql` 中的 `user` 表中
-- ![img_69.png](img_69.png)
-- ![img_70.png](img_70.png)
+- ![img_69.png](imgs/img_69.png)
+- ![img_70.png](imgs/img_70.png)
 
 ```mysql
 # mysql用户管理
@@ -1899,8 +1899,8 @@ SET PASSWORD FOR 'root'@'localhost' = PASSWORD('123456');
 
 Mysql权限管理
 - `grant 权限列表 on 库.对象名 to '用户名'@'登录位置' [identified by '密码']`
-- ![img_71.png](img_71.png)
-- ![img_72.png](img_72.png)
+- ![img_71.png](imgs/img_71.png)
+- ![img_72.png](imgs/img_72.png)
 
 ```mysql
 # 用户权限管理
@@ -1927,7 +1927,7 @@ SELECT * FROM mysql.user;
 ```
 
 - mysql用户管理细节
-  - ![img_73.png](img_73.png)
+  - ![img_73.png](imgs/img_73.png)
 
 ```mysql
 # 用户管理细节
