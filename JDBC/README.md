@@ -5,9 +5,9 @@
 1. JDBC为访问不同的数据库提供了统一的接口，为使用者屏蔽了细节问题
 2. Java程序员使用JDBC，可以连接任何提供了JDBC驱动程序的数据库系统，从而完成对数据库的各种操作
 3. JDBC的基本原理
-   - ![img.png](img.png)
+   - ![img.png](imgs/img.png)
 4. JDBC带来的好处
-   - ![img_1.png](img_1.png)
+   - ![img_1.png](imgs/img_1.png)
 5. JDBC是Java提供一套用于数据库操作的接口API，**Java程序员只需要面向这套接口编程即可**。
    不同的数据库厂商，需针对这套接口，提供不同的实现。
 
@@ -16,7 +16,7 @@
 2. 获取连接-得到Connection
 3. 执行增删改查-发送SQL给mysql执行
 4. 释放资源-关闭相关连接
-5. ![img_2.png](img_2.png)
+5. ![img_2.png](imgs/img_2.png)
 
 ```java
 package com.charlie.jdbc;
@@ -84,7 +84,7 @@ public class Jdbc01 {
 >     jar包下 `META-INF\services\java.sql.Driver` 文本种的类名称去注册
 > 3. 建议写上 `Class.forName()` 更加明确
 
-- ![img_3.png](img_3.png)
+- ![img_3.png](imgs/img_3.png)
 
 ```java
 package com.charlie.jdbc;
@@ -238,7 +238,7 @@ public class JdbcConn {
 2. `ResultSet`对象保持一个光标指向其当前的数据行。最初，光标位于第一行之前
 3. `next`方法将光标移动到下一行，并且由于在 `ResultSet` 对象种没有更多行时返回 `false`
    因此可以在 while循环种使用循环来遍历结果集
-- ![img_4.png](img_4.png)
+- ![img_4.png](imgs/img_4.png)
 
 ```java
 package com.charlie.jdbc.resultset_;
@@ -367,7 +367,7 @@ public class Statement_ {
    `setXXX()`方法有两个参数，第一个参数是要设置的SQL语句中的参数的索引(从1开始)，第二个是设置的SQL语句中的参数的值
 2. 调用 `executeQuery()` 返回 `ResultSet` 对象
 3. 调用 `executeUpdate()` 执行更新，包括增、删、修改
-4. ![预处理优点](img_5.png)
+4. ![预处理优点](imgs/img_5.png)
 
 ```java
 package com.charlie.jdbc;
@@ -634,7 +634,7 @@ public class JDBCUtils_Use {
 
 ## 事务
 
-- ![img_6.png](img_6.png)
+- ![img_6.png](imgs/img_6.png)
 
 ```java
 package com.charlie.jdbc.transaction_;
@@ -724,7 +724,7 @@ public class Transaction_ {
 
 - 当需要成批插入或者更新记录时，可以采用Java的批量更新机制，这一机制允许多条语句一次性提交给数据库批量处理，
   通常情况下比单独提交处理更有效率
-- ![img_7.png](img_7.png)
+- ![img_7.png](imgs/img_7.png)
 - JDBC连接Mysql时，如果要使用批处理功能，需要在url中加入参数 `?rewriteBatchedStatements=true`，如
   `url=jdbc:mysql://localhost:3306/hsp_db02?rewriteBatchedStatements=true`
 
@@ -810,3 +810,436 @@ public class Batch_ {
     }
 }
 ```
+
+## 数据库连接池
+
+- 传统获取Connection问题分析
+- ![img_8.png](imgs/img_8.png)
+
+```java
+package com.charlie.jdbc.datasource;
+
+import com.charlie.jdbc.utils.JDBCUtils_Test;
+import org.junit.Test;
+
+import java.sql.Connection;
+
+public class ConnQuestion {
+    // 测试连接MySQL 5000次
+    @Test
+    public void testConn() {
+        long start = System.currentTimeMillis();
+        for (int i = 0; i < 5000; i++) {
+            // 使用传统jdbc方式，得到连接
+            Connection connection = JDBCUtils_Test.getConnection();
+            // 这里可以做一些工作，比如得到 preparedStatement
+            /********** 不断开连接会报错 ： "Too many connections"  ***************/
+            // 关闭
+            JDBCUtils_Test.close(null, null, connection);
+        }
+        long end = System.currentTimeMillis();
+        System.out.println("传统方式连接5000次，耗时：" + (end - start));  // 4145ms
+    }
+}
+```
+
+- 数据库连接池基本介绍
+- ![img_9.png](imgs/img_9.png)
+- [c3p0](src/com/charlie/jdbc/datasource/C3P0_.java)
+- [druid](src/com/charlie/jdbc/datasource/Druid_.java)
+- [JDBCUtilsByDruid](src/com/charlie/jdbc/utils/JDBCUtilsByDruid.java)
+
+```java
+package com.charlie.jdbc.datasource;
+
+import com.mchange.v2.c3p0.ComboPooledDataSource;
+import org.junit.Test;
+
+import javax.swing.plaf.IconUIResource;
+import java.beans.PropertyVetoException;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.Properties;
+
+/**
+ * 演示c3p0的使用
+ */
+public class C3P0_ {
+    // 方式1：相关参数，在程序中指定 user, url, password等
+    @Test
+    public void testC3P0_01() throws Exception {
+        // 1. 创建一个数据源对象
+        ComboPooledDataSource comboPooledDataSource = new ComboPooledDataSource();
+        // 2. 通过配置文件 mysql.properties 获取相关的信息
+        Properties properties = new Properties();
+        properties.load(new FileInputStream("src\\mysql.properties"));
+        String url = properties.getProperty("url");
+        String user = properties.getProperty("user");
+        String password = properties.getProperty("password");
+        String driver = properties.getProperty("driver");
+        // 3. 给数据源 comboPooledDataSource 设置相关的参数
+        // 注意：连接管理是由 comboPooledDataSource 来管理
+        comboPooledDataSource.setDriverClass(driver);
+        comboPooledDataSource.setJdbcUrl(url);
+        comboPooledDataSource.setUser(user);
+        comboPooledDataSource.setPassword(password);
+
+        // 设置初始化连接数
+        comboPooledDataSource.setInitialPoolSize(10);
+        // 设置最大连接数
+        comboPooledDataSource.setMaxPoolSize(50);
+
+        // 测试连接池的效率，连接mysql 5000次操作
+        long start = System.currentTimeMillis();
+        for (int i = 0; i < 5000; i++) {
+            // 获取连接
+            Connection connection = comboPooledDataSource.getConnection();
+            // 关闭连接
+            connection.close();
+        }
+        long end = System.currentTimeMillis();
+        System.out.println("C3P0 5000次连接mysql，耗时：" + (end - start));    // 193
+    }
+
+    // 第二种方式：使用配置文件模板来完成
+    // 1. 将c3p0提供的 c3p0.config,xml 拷贝到 src 目录下
+    // 2. 该文件指定了连接数据库和连接池的相关参数
+    @Test
+    public void testC3P0_02() throws SQLException {
+        ComboPooledDataSource comboPooledDataSource = new ComboPooledDataSource("hsp_edu");
+        long start = System.currentTimeMillis();
+        for (int i = 0; i < 5000; i++) {
+            Connection connection = comboPooledDataSource.getConnection();
+//            System.out.println("连接成功~");
+            connection.close();
+        }
+        long end = System.currentTimeMillis();
+        System.out.println("C3P0 5000次连接mysql，耗时：" + (end - start));    // 197
+    }
+}
+```
+
+```java
+package com.charlie.jdbc.datasource;
+
+import com.alibaba.druid.pool.DruidDataSourceFactory;
+import org.junit.Test;
+
+import javax.sql.DataSource;
+import java.io.FileInputStream;
+import java.sql.Connection;
+import java.util.Properties;
+
+public class Druid_ {
+    @Test
+    public void testDruid() throws Exception {
+        // 1. 加入 Druid jar包
+        // 2. 加入 配置文件 到 src 目录下
+        // 3. 创建 Properties 对象，读取配置文件
+        Properties properties = new Properties();
+        properties.load(new FileInputStream("src\\druid.properties"));
+        // 4. 创建一个指定参数的数据库连接池
+        DataSource dataSource = DruidDataSourceFactory.createDataSource(properties);
+        long start = System.currentTimeMillis();
+        for (int i = 0; i < 5000; i++) {
+            Connection connection = dataSource.getConnection();
+//            System.out.println("连接成功...");
+            connection.close();
+        }
+        long end = System.currentTimeMillis();
+        System.out.println("Druid连接池，连接5000次耗时：" + (end - start));  // 260
+    }
+}
+```
+
+```java
+package com.charlie.jdbc.utils;
+
+import com.alibaba.druid.pool.DruidDataSourceFactory;
+
+import javax.sql.DataSource;
+import java.io.FileInputStream;
+import java.sql.*;
+import java.util.Properties;
+
+/**
+ * 基于Druid数据库连接池的工具类
+ */
+public class JDBCUtilsByDruid {
+    private static final String druidProperties = "src\\druid.properties";
+    private static final DataSource ds;
+
+    // 测试 该工具类
+    public static void main(String[] args) throws Exception {
+        String sql = "select * from admin";
+        Connection connection = JDBCUtilsByDruid.getConnection();
+        // class com.alibaba.druid.pool.DruidPooledConnection
+        System.out.println(connection.getClass());
+        PreparedStatement preparedStatement = connection.prepareStatement(sql);
+        ResultSet resultSet = preparedStatement.executeQuery(sql);
+        while (resultSet.next()) {
+            int id = resultSet.getInt("id");
+            String name = resultSet.getString("name");
+            String pwd = resultSet.getString("pwd");
+            System.out.println(id + "\t" + name + "\t" + pwd);
+        }
+        JDBCUtilsByDruid.close(resultSet, preparedStatement, connection);
+    }
+
+    static {
+        Properties properties = new Properties();
+        try {
+            properties.load(new FileInputStream(druidProperties));
+            ds = DruidDataSourceFactory.createDataSource(properties);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static Connection getConnection() throws SQLException {
+        return ds.getConnection();
+    }
+
+    // 关闭连接，注意：在数据库连接池技术中，close不是真正地断掉连接
+    // 而是把使用的 Connection对象 放回到连接池
+    public static void close(ResultSet set, PreparedStatement preparedStatement, Connection connection) {
+        try {
+            if (set != null) {
+                set.close();
+            }
+            if (preparedStatement != null) {
+                preparedStatement.close();
+            }
+            if (connection != null) {
+                connection.close();
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+}
+```
+
+## Apache-DBUtils
+
+现有问题：
+1. 关闭 `connection`后，`resultSet`结果集无法使用
+2. `resultSet`不利于数据管理
+3. ![img_10.png](imgs/img_10.png)
+
+```java
+package com.charlie.jdbc.utils;
+
+import org.junit.Test;
+
+import java.sql.*;
+import java.util.ArrayList;
+
+/**
+ * 基于Druid数据库连接池的工具类
+ */
+public class JDBCUtilsByDruid_USE {
+
+    @Test
+    public ArrayList<Actor> testSelectToArrayList() {
+        Connection connection = null;
+        PreparedStatement preparedStatement = null;
+        ResultSet set = null;
+
+        // 创建ArrayList对象，存放actor对象
+        ArrayList<Actor> list = new ArrayList<>();
+
+        try {
+            connection = JDBCUtilsByDruid.getConnection();
+            String sql = "select * from actor where id >= ?;";
+            preparedStatement = connection.prepareStatement(sql);
+            preparedStatement.setInt(1, 3);
+            set = preparedStatement.executeQuery();
+            while (set.next()) {
+                int id = set.getInt("id");
+                String name = set.getString("name");
+                String gender = set.getString("gender");
+                Date date = set.getDate("borndate");
+                String phone = set.getString("phone");
+
+                // 把得到的resultSet的记录，封装到Actor对象，放入到list集合
+                list.add(new Actor(id, name, gender, date, phone));
+            }
+//            System.out.println("list集合数据：" + list);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        } finally {
+            // 关闭资源
+            JDBCUtilsByDruid.close(set, preparedStatement, connection);
+        }
+        
+        // 因为 ArrayList 和 connection 没有任何关联，所以该集合可以在关闭连接后继续使用
+        return list;
+    }
+}
+```
+
+- ![img_11.png](imgs/img_11.png)
+
+```java
+package com.charlie.jdbc.datasource;
+
+import com.charlie.jdbc.utils.Actor;
+import com.charlie.jdbc.utils.JDBCUtilsByDruid;
+import org.apache.commons.dbutils.QueryRunner;
+import org.apache.commons.dbutils.handlers.BeanHandler;
+import org.apache.commons.dbutils.handlers.BeanListHandler;
+import org.apache.commons.dbutils.handlers.ScalarHandler;
+import org.junit.Test;
+
+import java.sql.*;
+import java.util.List;
+
+/**
+ * 基于Druid数据库连接池的工具类
+ */
+public class DBUtils_USE {
+
+    // 使用 apache-DBUtils 工具类 + druid 完成对表的 crud 操作
+    @Test
+    public void testQueryMany() throws SQLException {
+        // 1. 得到连接 druid
+        Connection connection = JDBCUtilsByDruid.getConnection();
+        // 2. 使用 DBUtils 类和接口，先引进 DBUtils 相关的 jar，加入到本project
+        // 3. 创建 QueryRunner
+        QueryRunner queryRunner = new QueryRunner();
+        // 4. 就可以执行相关的方法，返回 ArrayList 结果集
+//        String sql = "select * from actor where id >= ?";
+        // 注意：sql语句也可以查询部分属性
+        String sql = "select id, name from actor where id >= ?";
+
+        /*
+        1) query() 方法就是执行 sql语句，得到 resultSet --封装到--> ArrayList集合中
+        2) 返回集合
+        3) connection：连接
+        4) sql：执行的sql语句
+        5) new BeanListHandler<>(Actor.class) 在将resultSet -> Actor对象 -> 封装到 ArrayList
+                底层使用反射机制获取 Actor类的属性，然后进行封装
+        6) 1 就是传给 sql语句中的 ? 赋值，可以有多个值，因为是可变参数 Object... params
+        7) 底层得到的 resultSet 会在 query 关闭，关闭 preparedStatement
+         */
+        /**
+         *     public <T> T query(Connection conn, String sql, ResultSetHandler<T> rsh, Object... params) throws SQLException {
+         *         PreparedStatement stmt = null;   // 定义 PreparedStatement
+         *         ResultSet rs = null;             // 接收返回的 ResultSet
+         *         T result = null;                 // 返回 ArrayList
+         *
+         *         try {
+         *             stmt = this.prepareStatement(conn, sql); // 创建 PreparedStatement
+         *             this.fillStatement(stmt, params);        // 对 sql 进行 ? 赋值
+         *             rs = this.wrap(stmt.executeQuery());     // 执行sql 返回 resultSet
+         *             result = rsh.handle(rs);                 // 返回的 resultSet --> ArrayList[resultSet] 底层使用到反射机制
+         *         } catch (SQLException var33) {
+         *             this.rethrow(var33, sql, params);
+         *         } finally {
+         *             try {
+         *                 this.close(rs);                      // 关闭 resultSet
+         *             } finally {
+         *                 this.close((Statement)stmt);         // 关闭 preparedStatement
+         *             }
+         *         }
+         *
+         *         return result;
+         *     }
+         */
+        List<Actor> list =
+                queryRunner.query(connection, sql, new BeanListHandler<>(Actor.class), 1);
+        System.out.println("输出集合信息");
+        for (Actor actor : list) {
+            System.out.print(actor);
+        }
+        // 释放资源
+        JDBCUtilsByDruid.close(null, null, connection);
+    }
+
+    // 演示 apache-dbutils + druid 完成 返回的结果是单行记录(单个对象)
+    @Test
+    public void testQuerySingle() throws SQLException {
+        // 1. 得到连接 druid
+        Connection connection = JDBCUtilsByDruid.getConnection();
+        // 2. 使用 DBUtils类和接口，创建 QueryRunner
+        QueryRunner queryRunner = new QueryRunner();
+        // 3. 执行相关方法，返回单个对象
+        String sql = "select * from actor where id = ?";
+        /*
+        因为知道返回的是单行记录 <----> 单个对象，使用 Handler 是 BeanHandler
+         */
+        Actor actor = queryRunner.query(connection, sql, new BeanHandler<>(Actor.class), 4);
+        if (actor != null) {
+            System.out.println(actor);
+        } else {
+            System.out.println("查无此记录~");
+        }
+        // 释放资源
+        JDBCUtilsByDruid.close(null, null, connection);
+    }
+
+    // 演示 apache-dbutils + druid 完成查询结果是单行单列-返回的就是object
+    @Test
+    public void testScalar() throws SQLException {
+        Connection connection = JDBCUtilsByDruid.getConnection();
+        QueryRunner queryRunner = new QueryRunner();
+        String sql = "select name from actor where id = ?";
+        /*
+        因为返回的是一个对象，使用的 handler 是 ScalarHandler
+         */
+        Object obj = queryRunner.query(connection, sql, new ScalarHandler(), 3);
+        if (obj == null) {
+            System.out.println("查无此人");
+        } else {
+            System.out.println(obj);
+        }
+        JDBCUtilsByDruid.close(null, null, connection);
+    }
+
+    // 演示 apache-dbutils + druid 完成 dml (update, insert, delete)
+    @Test
+    public void testDML() throws SQLException {
+        Connection connection = JDBCUtilsByDruid.getConnection();
+        QueryRunner queryRunner = new QueryRunner();
+        // 这里组织sql语句完成 update, insert, delete
+//        String sql = "update actor set name = ? where id = ?";
+//        String sql = "insert into actor values (null, '侯亮平', '男', '1975-1-9', '166')";
+        String sql = "delete from actor where id = ?";
+        /*
+        1. 执行 dml 操作是 queryRunner.update()
+        2. 返回值是受影响的行数
+         */
+        int affectedRow = queryRunner.update(connection, sql, 4);
+        System.out.println(affectedRow > 0 ? "执行成功！" : "执行未影响到表");
+        JDBCUtilsByDruid.close(null, null, connection);
+    }
+}
+```
+
+- 表和JavaBean的类型映射关系
+- ![img_12.png](imgs/img_12.png)
+- `int`和`double`等在Java中都用**包装类**，因为mysql中的所有类型都可能是 `null`，而Java只有引用数据类型才有Null值
+
+## DAO和增删改查通用方法-BasicDao
+
+- `apache-dbutils` + `druid`简化了JDBC开发，但还有不足：
+1. SQL语句是固定的，不能通过参数传入，通用性不好，需要进行改进，更方便执行**增删改查**
+2. 对于select操作，如果有返回值，返回类型不能固定，需要使用泛型
+3. 将来的表很多，业务需求复杂，不可能只靠一个Java类完成
+4. 引入 ---> BasicDAO
+- ![img_13.png](imgs/img_13.png)
+- `DAO`：(data access object)数据访问对象
+- `BasicDao`即通用类，是专门和数据库交互的，即完成对数据库(表)的crud操作
+- 在`BasicDao`的基础商，实现一张表对应一个Dao，更好的完成功能，
+    比如 `Customer`表-`Customer.java`类(javabean)-`CustomerDao.java`
+- ![设计架构](imgs/img_14.png)
+
+- [dao/BasicDAO](src/com/charlie/dao_/dao/BasicDAO.java)
+- [dao/ActorDAO](src/com/charlie/dao_/dao/ActorDAO.java)
+- [domain/Actor](src/com/charlie/dao_/domain/Actor.java)
+- [utils](src/com/charlie/dao_/utils/JDBCUtilsByDruid.java)
+- [test/TestDAO](src/com/charlie/dao_/test/TestDAO.java)
