@@ -2681,7 +2681,7 @@ TCP网络通信编程
 | `Java程序在计算机有三个阶段` | ![1700293664435](image/README/1700293664435.png)                                                            |
 | ------------------------------ | --------------------------------------------------------------------------------------------------------- |
 | `Java反射机制可以完成`       | ![1700293876323](image/README/1700293876323.png)                                                            |
-| `反射相关的主要类`           | ![1700294026246](https://file+.vscode-resource.vscode-cdn.net/e%3A/javacode/image/README/1700294026246.png) |
+| `反射相关的主要类`           | ![1700294026246](image/README/1700294026246.png) |
 | `反射优点和缺点`             | ![1700294645713](image/README/1700294645713.png)                                                            |
 | `反射调用优化-关闭访问检测`  | ![1700295338365](image/README/1700295338365.png)                                                            |
 
@@ -2928,10 +2928,3737 @@ class Person extends A implements IA, IB {
 | `通过反射访问类中的成员` | ![1700383183816](image/README/1700383183816.png) |
 | `访问方法`               | ![1700394677192](image/README/1700394677192.png) |
 
-`2023-11-19:P731`
+## MySQL
 
-> 待完成：
+命令行窗口连接MySQL数据库
+```
+# 启动mysql数据库的常用方法[Dos命令]
+> net start mysql   # 启动mysql服务
+> net stop mysql    # 关闭服务
+
+# 登录mysql服务，登录前保证服务启动
+> mysql -h 主机名 -P 端口号 -u 用户名 -p密码
+# 示例
+> mysql -h 127.0.0.1 -P 3306 -u root -p9527
+# 注意：-p和密码之间不空格，或者输入到-p直接回车，再进行密码验证
+```
+
+- ![操作示意图](MySQL/imgs/img_2.png)
+- 使用 `netstat -abn` 查看服务及监听端口
+- ![netstat -abn](MySQL/imgs/img.png)
+- ![mysql](MySQL/imgs/img_1.png)
+
+### 数据库三层结构
+
+1. 所谓安装Mysql数据库，就是在主机上安装一个数据库管理系统(database manage system, DBMS)，这个管理程序可以管理多个数据库
+2. 一个数据库中可以创建多个表，以保存数据(信息)
+3. 数据库管理系统(DBMS)、数据库和表的关系如下图所示：
+    - ![Mysql三层结构](MySQL/imgs/img_3.png)
+    - Mysql数据库-普通表的本质仍然是**文件**
+4. 数据在数据库中的存储方式
+    - ![img_4.png](MySQL/imgs/img_4.png)
+    - 表的一行称之为一条记录
+    - 在java程序中，一行记录往往使用对象表示
+5. SQL语句分类
+    - DDL：数据定义语句 [create 表, 库...]
+    - DML：数据操作语句 [增加 insert, 修改 update, 删除 delete]
+    - DQL：数据查询语句 [select]
+    - DCL：数据控制语句 [管理数据库：比如用户权限 grant revoke]
+
+### 数据库
+
+#### 创建数据库
+
+- ![创建数据库](MySQL/imgs/img_5.png)
+    1. `CHARACTER SET`：指定数据库采样的字符集，如果不指定字符集，默认 `utf8`
+    2. `COLLATE`：指定数据库字符集的校对规则
+        1. `utf8_bin`：区分大小写
+        2. `utf8_general_ci`：**不区分大小写，默认选项**
+
+```mysql
+# 创建数据库，默认不区分大小写
+CREATE DATABASE IF NOT EXISTS hsp_db01;
+# 删除数据库
+DROP DATABASE hsp_db01;
+# 创建数据库 hsp_db02 区分大小写
+CREATE DATABASE hsp_db02 CHARACTER SET utf8 COLLATE utf8_bin;
+# 查询语句，select 查询 * 表示所有字段
+# from 从哪个表 where 从哪个字段 name = 'tom' 查询名字是tom
+SELECT * FROM t1 WHERE NAME = 'tom';
+```
+
+- ![表数据](MySQL/imgs/img_6.png)
+- 以上查询语句，对于 `hsp_db01` 和 `hsp_db02` 的执行结果分别如下：
+    - ![db01](MySQL/imgs/img_7.png)
+    - ![db02](MySQL/imgs/img_8.png)
+
+#### 查看、删除数据库
+
+- ![img_9.png](MySQL/imgs/img_9.png)
+
+```mysql
+# 演示删除和查询数据库
+# 查看当前数据库服务器中的所有数据库
+SHOW DATABASES;
+# 查看指定的数据库的定义信息
+SHOW CREATE DATABASE hsp_db02;
+# 在创建数据库，表时，为了规避关键字，可以使用反引号解决
+CREATE DATABASE `create`;	# 创建名为 create 的数据库
+# 删除前面创建创建的 hsp_db01 数据库
+DROP DATABASE IF EXISTS hsp_db01;
+```
+
+#### 备份和恢复数据库
+
+- ![备份和恢复数据库](MySQL/imgs/img_10.png)
+
+```mysql
+# 备份和恢复数据库
+# 备份数据库，需要在 DOS 下执行 mysqldump指令(即：Mysql\bin\mysqldump.exe)
+# 备份的文件，其实就是对应的sql语句
+# dos> mysqldump -u root -p -B db03 hsp_db02 > d:\\bak.sql
+
+# 恢复数据库(注意：进入到Mysql命令行再执行)
+# mysql> source d:\\bak.sql
+# 恢复方法2：直接将 bak.sql 的内容放到查询编辑器中，全部执行即可
+
+
+# 备份和恢复数据库的表
+# dos> mysqldump -u -p 数据库 表1 表2 表n > d:\\bak1.sql
+/* 恢复备份的数据库中的表
+1. 进入到 mysql命令行
+	dos> mysql -u root -p
+2. 选择数据库
+	mysql> use db03
+3. 恢复数据库中备份的表
+	mysql> source d:\\bak1.sql
+*/
+```
+
+<hr/>
+
+```mysql
+# 显示所有数据库
+SHOW DATABASES;
+# 查询当前所在数据库
+SELECT DATABASE();
+# 创建数据库
+CREATE DATABASE IF NOT EXISTS db01 CHARACTER SET utf8 COLLATE utf8_general_ci;
+# 查看指定数据库创建语句
+SHOW CREATE DATABASE db01;
+# 删除指定数据库
+DROP DATABASE IF EXISTS db01;
+# 备份数据库，dos> 表示在dos命令行下运行该指令
+# dos> mysqldump -u root -p -B db03 hsp_db02 > d:\\bak.sql
+# 备份数据库中的表
+# dos> mysqldump -u root -p db03 users > d:\\bak1.sql
+# 恢复备份的数据库
+/*
+方式1：
+# 进入mysql命令行
+dos> mysql -u root -p
+# 恢复备份
+mysql> source d:\\bak.sql
+方式2：
+直接复制备份的数据库文件(其实就是sql语句)中的内容，在编辑器下全部运行即可
+*/
+```
+
+### 表
+
+#### 创建表
+
+- ![创建表](MySQL/imgs/img_11.png)
+
+```mysql
+# 创建表
+CREATE TABLE `user` (
+	id INT,
+	`name` VARCHAR(255),
+	`password` VARCHAR(32),
+	`birthday` DATE)
+	CHARACTER SET utf8 COLLATE utf8_bin ENGINE INNODB;
+```
+
+#### Mysql常用数据类型(列类型)
+
+- ![Mysql数据类型](MySQL/imgs/img_12.png)
+1. 数值类型
+    - 整型
+        - `tinyint[1个字节]`
+        - `smallint[2个字节]`
+        - `mediumint[3个字节]`
+        - `int[4个字节]`：※
+        - `bigint[8个字节]`
+        - `BIT(M)`：位类型，M指定位数，默认值1，范围1~64
+    - 小数类型
+        - `float[单精度 4字节]`
+        - `double[双精度 8字节]`：※
+        - `decimal[M,D]`：根据M和D确定精度，M指定长度，D表示小数点的位数 ※
+2. 文本类型(字符串类型)
+    - `char`：0~255 ※
+    - `varchar`：0~65535(2^16-1) ※
+    - `text`：0~2^16-1 ※
+    - `longtext`：0~2^32-1
+3. 二进制数据类型
+    - `blob`：0~2^16-1
+    - `longblob`：0~2^32-1
+4. 日期类型
+    - `date`：日期：年/月/日
+    - `time`：事件：时/分/秒
+    - `datetime`：年月日时分秒 [YYYY-MM-DD-HH:mm:ss] ※
+    - `timestamp`：时间戳
+    - `year`：年
+
+- 数值型(整数)的基本使用
+1. 说明：在能满足需求的情况下，尽量选择占用空间小的类型
+2. ![整型](MySQL/imgs/img_13.png)
+
+```mysql
+# 演示整型使用
+# 说明：表的字符集、校验规则、存储引擎使用默认
+# 1. 如果没有指定 unsigned ，则默认数值类型都为有符号类型
+# 2. 以 tinyint 为例，有符号范围 -128~127 无符号 0~255
+CREATE TABLE t2 (
+	id TINYINT);
+CREATE TABLE t3 (
+	id TINYINT UNSIGNED);	# 无符号类型
+
+INSERT INTO t2 VALUES(-128);	# 添加语句
+SELECT * FROM t2;
+
+INSERT INTO t3 VALUES(255);
+SELECT * FROM t3;
+```
+
+- 数值型(bit)
+- `bit`字段显示时，按照位的方式显示
+- 查询的时候仍然可以使用添加的数值进行查询，如添加255，在数据库中保存为 `b'11111111'`，
+  在查询时，仍然可以按照 255 查询
+- 如果一个值只有0和1，可以考虑使用 `bit(1)` 节约空间
+- 位类型，`bit(M)` M指定位数，默认值1，范围1~64
+
+```mysql
+# 演示 bit类型 使用
+/* 说明
+1. bit(m) m范围1~64
+2. 添加数据 范围按照给定的 位数 确定，比如m=8，表示一个字节 0~255
+3. 显示按照的bit，即二进制格式
+4. 查询时，仍然可以按照数来查询
+*/
+CREATE TABLE t4 (num BIT(8));	# 8位，范围0~255
+INSERT INTO t4 VALUES(255);	# b'11111111'
+SELECT * FROM t4;
+SELECT * FROM t4 WHERE num = 255;
+```
+
+- 数值型(小数类型)
+- ![小数类型](MySQL/imgs/img_14.png)
+- ![数据保存结果](MySQL/imgs/img_15.png)
+
+```mysql
+# 演示decimal类型、float、double使用
+
+# 创建表
+CREATE TABLE t5 (
+	num1 FLOAT,
+	num2 DOUBLE,
+	num3 DECIMAL(30, 20));	# 30位长，20个小数位
+# 添加数据
+INSERT INTO t5 VALUES (88.12345678912345, 88.12345678912345, 88.12345678912345);
+SELECT * FROM t5;
+```
+
+- 字符串
+- ![字符串](MySQL/imgs/img_16.png)
+- ![img_17.png](MySQL/imgs/img_17.png)
+- ![img_18.png](MySQL/imgs/img_18.png)
+
+```mysql
+# 演示字符串类型使用 char varchar
+# 注释的快捷键：shift+ctrl+c 取消注释：shift+ctrl+r
+/*
+CHAR(size)
+- 固定长度字符串，最大255   字符
+VARCHAR(size)
+- 可变长度字符串，最大65535 字节    [utf8编码最大21844个字符，1~3个字节用于记录大小]
+-- 如果表的编码是 utf8 varchar(size) size = (65535 - 3) / 3 = 21844(字符)
+-- 如果表的编码是 gbk varchar(size) size = (65535 - 3) / 2 = 32766(字符)
+*/
+
+
+CREATE TABLE t6 (
+	`name` CHAR(255));
+CREATE TABLE t7 (
+	`name` VARCHAR(21844));
+CREATE TABLE t8 (
+	`name` VARCHAR(32766)) CHARSET gbk;
+-- drop table t8;
+
+
+# 字符串使用细节
+/*
+* 细节1
+* 1. char(4) 这个4表示字符数(最大255)，不是字节数，不管是中文还是字母都是放4个，按字符计算
+* 2. varchar(4) 这个4也是表示字符串，不管是字母还是中文都是以定义好的表的编码方式来存放数据
+* 细节2
+* 1. char(4)是定长(固定的大小)，即使插入 'aa' 也会占用分配的4个字符的空间
+* 2. varchar(4)是变长(变化的大小)，即如果插入了 'aa'，实际占用空间大小并非4个字符，而是按照实际
+*	占用空间分配。varchar本身还需要占用1~3个字节来记录存放内容长度。L(实际数据大小) + (1~3)字节
+* 细节3
+* 什么使用使用 char 什么时候使用varchar
+* 1. 如果数据是定长，推荐使用char，比如md5的密码、邮编、手机号、身份证号码等
+* 2. 如果一个字段的长度是不确定的，就是用varchar，比如留言、文章
+* 3. 查询速度：char > varchar
+*/
+CREATE TABLE t6 (
+	`name` CHAR(4));	# 4表示字符个数，不区分是字母还是汉字。可以少于，不可多于
+INSERT INTO t6 VALUES('史塔克');
+SELECT * FROM t6;
+
+CREATE TABLE t7 (
+	`name` VARCHAR(4));
+INSERT INTO t7 VALUES('拜拉席恩');
+SELECT * FROM t7;
+
+# 如果varchar不够用，可以使用mediumtext或者longtext
+# 也可以简单点，直接使用text
+CREATE TABLE t8 (content TEXT, context2 MEDIUMTEXT, context3 LONGTEXT);
+INSERT INTO t8 VALUES('史塔克', '犀利01', '拜拉席恩');
+SELECT * FROM t8;
+```
+
+- 日期类型的基本使用
+- ![img_19.png](MySQL/imgs/img_19.png)
+- ![img_20.png](MySQL/imgs/img_20.png)
+
+```mysql
+# 演示事件相关的类型
+# 创建一张表
+CREATE TABLE t9 (
+	birthday DATE,	-- 生日
+	jobtime DATETIME, -- 记录年月日 时分秒
+	login_time TIMESTAMP
+		NOT NULL			-- 非空
+		DEFAULT CURRENT_TIMESTAMP 	-- 默认当前时间
+		ON UPDATE CURRENT_TIMESTAMP	-- 更新时更新为当前时间
+	);
+SELECT * FROM t9;
+INSERT INTO t9(birthday, jobtime) 
+	VALUES ('2023-12-23', '2023-12-23 19:25:30');
+-- 如果更新 t9表的某条记录，login_time列会自动的以当前时间进行更新
+```
+
+#### 修改表
+
+- ![img_21.png](MySQL/imgs/img_21.png)
+
+<hr/>
+
+```mysql
+# 创建一个员工表 emp
+SELECT DATABASE();
+# 删除数据库 db03
+DROP DATABASE IF EXISTS db03;
+# 查看当前有哪些数据库
+SHOW DATABASES;
+# 创建数据库 db01
+CREATE DATABASE IF NOT EXISTS db01;
+# 创建员工表 emp
+CREATE TABLE emp (
+	id INT,
+	NAME VARCHAR(16),
+	gender CHAR(1),
+	birthday DATE,
+	entry_date DATE,
+	job VARCHAR(32),
+	salary DOUBLE UNSIGNED,
+	`resume` TEXT
+	) CHARSET utf8 COLLATE utf8_general_ci ENGINE INNODB;
+# 查看当前数据库有哪些表
+SHOW TABLES;
+# 查看表结构，可以查看表的所有列
+DESC emp;
+
+
+# 修改表
+# 在 emp表 上增加一个 image列 varchar类型 要求在(resume列)后面
+ALTER TABLE emp ADD image VARCHAR(16) NOT NULL DEFAULT '' 
+			AFTER `resume`;	-- 在 resume字段 后面添加 image字段
+# 修改 job列，使其长度为60
+ALTER TABLE emp MODIFY job VARCHAR(60);
+# 删除 gender列
+ALTER TABLE emp DROP gender;
+# 修改表名改为 employee
+RENAME TABLE emp TO employee;
+SHOW TABLES;	-- 查看发现已修改表名
+DESC employee;
+# 修改表的字符集为 utf8
+ALTER TABLE employee CHARSET utf8;
+# 将列名 name 修改为 user_name
+ALTER TABLE employee CHANGE `name` use_name VARCHAR(32) NOT NULL DEFAULT '';
+```
+
+#### CRUD
+
+数据库C[create]R[read]U[update]D[delete]
+1. Insert语句-添加数据
+2. Update语句-更新数据
+3. Delete语句-删除数据
+4. Select语句-查找数据
+
+- `insert`语句
+- ![img_22.png](MySQL/imgs/img_22.png)
+
+```mysql
+-- 练习insert语句
+SELECT DATABASE();
+USE db01;
+CREATE TABLE `goods` (
+	id INT,
+	good_name VARCHAR(10),
+	price DOUBLE);
+
+-- 添加数据
+INSERT INTO goods (id, good_name, price)
+	VALUES(10, 'HUAWEI', 2000);
+INSERT INTO goods (id, good_name, price)
+	VALUES(12, 'APPLE', 3600);
+SELECT * FROM goods;
+
+
+# insert语句的细节
+-- 1. 插入的数据应与字段的数据类型相同。如把 'abc' 添加到 int 类型会报错
+-- 	如把 '30' 添加到 int类型中，会尝试类型转换，可以进行
+INSERT INTO goods (id, good_name, price)
+	VALUES ('30', 'MI', 1800);
+-- 2. 数据的长度应在列的规定范围内，例如：不能将一个长度为80的字符串加入到长度为40的列中
+-- 3. 在values中列出的数据位置必须与被加入的列的排列位置相对应
+-- 4. 字符和日期型数据应包含在单引号中
+/*insert into goods (id, good_name, price)
+	values (40, VIVO, 2200);
+*/
+-- 5. 列可以插入空值(前提是该字段允许为空，默认可以为空)
+INSERT INTO goods (id, good_name, price)
+	VALUES (40, 'vivo', NULL);
+-- 6. insert into tab_name (列名...) values (), (), () 形式添加多条记录
+INSERT INTO goods (id, good_name, price)
+	VALUES (50, 'oppo', 1900), (60, 'SAM', 3200);
+-- 7. 如果是给表中的所有字段添加数据，可以不写前面字段名称
+INSERT INTO goods VALUES (70, 'X', 3000);
+-- 8. 默认值的使用，当不给某个字段值时，如果有默认值就会添加默认值，否则报错
+--	如果某列没有指定 not null 那么当添加数据时，没有给定值，则会默认为null
+-- 	如果希望指定某个列的默认值，可以在创建表时指定 default
+INSERT INTO goods (id, good_name)
+	VALUES (80, '格力手机');
+```
+
+- `update`语句
+- ![img_23.png](MySQL/imgs/img_23.png)
+- ![img_25.png](MySQL/imgs/img_25.png)
+
+```mysql
+# 演示update
+ALTER TABLE employee ADD salary DOUBLE NOT NULL DEFAULT 1000 AFTER job;
+DESC employee;
+SELECT * FROM employee;
+INSERT INTO employee VALUES 
+	(110, '小妖怪', '1997-10-06', '巡视员', 800, '2021-03-12 10:00:00', '巡逻', '大王叫我来巡山');
+-- 1. 将所有员工的薪水修改为 5000元
+UPDATE employee SET salary = 5000;	# 如果没有带 where 条件，会修改所有的记录，因此需要谨慎
+-- 2. 将姓名为小妖怪的员工薪水修改为3000
+UPDATE employee SET salary = 3000 WHERE user_name = '小妖怪';
+-- 3. 将李自成的薪水在原有基础上增加1000元
+UPDATE employee SET salary = salary + 1000 WHERE user_name = '李自成';
+-- 4. update可以修改多个列，中间使用 , 分隔
+UPDATE employee SET salary = salary + 1000, job = '起义' WHERE user_name = '李自成';
+
+# 使用细节
+/*
+1. update语法可以用新值更新原有表中的各列
+2. set子句指示要修改哪些列和要给予哪些值
+3. where子句指定应更新哪些行。如果没有where，则更新所有行(记录)，因此需要谨慎
+4. 如果需要修改多个字段，可以通过 set filed1 = value1, field2 = value2...
+*/
+```
+
+- `delete`语句
+- ![img_24.png](MySQL/imgs/img_24.png)
+
+```mysql
+# delete 语句演示
+SELECT * FROM employee;
+-- 删除表中名称为小妖怪的记录
+DELETE FROM employee 
+	WHERE user_name = '小妖怪';
+
+# delete使用细节
+-- 1. 如果不适用where子句，将删除表中所有数据
+DELETE FROM employee;
+-- 2. delete语句不能删除某一列的值(可使用update设置为null或者'')
+UPDATE employee SET job = '' WHERE user_name = '李自成';
+-- 3. 使用delete语句仅删除记录，不删除表本身。如果要删除表，使用 drop table 表名;
+DROP TABLE employee;
+```
+
+- `select`语句
+- ![select](MySQL/imgs/img_26.png)
+- ![img_27.png](MySQL/imgs/img_27.png)
+- ![where条件运算符](MySQL/imgs/img_28.png)
+- ![order by](MySQL/imgs/img_29.png)
+
+```mysql
+# select 语句[重点，难点]
+CREATE TABLE student (
+	id INT NOT NULL DEFAULT 1,
+	`name` VARCHAR(20) NOT NULL DEFAULT '',
+	chinese FLOAT NOT NULL DEFAULT 0.0,
+	english FLOAT NOT NULL DEFAULT 0.0,
+	math FLOAT NOT NULL DEFAULT 0.0
+	);
+INSERT INTO student (id, `name`, chinese, english, math) VALUES 
+	(1, '王熙凤', 78, 65, 89),
+	(2, '妙玉', 85, 70, 76),
+	(3, '薛宝钗', 100, 80, 97),
+	(4, '贾宝玉', 90, 70, 80),
+	(5, '林黛玉', 100, 85, 96),
+	(6, '史湘云', 93, 70, 82),
+	(7, '贾探春', 90, 85, 86);
+
+
+-- 1. 查询表中所有学生信息
+SELECT * FROM student;
+-- 2. 查询表中所有学生的姓名和对应的语文成绩
+SELECT `name`, chinese FROM student;
+-- 3. 过滤表中重复数据
+SELECT DISTINCT english FROM student;	# 去掉 english 成绩重复的数据
+-- 4. 要查询的记录，每个字段都相同，才会去重
+SELECT DISTINCT `name`, chinese FROM student;	# 虽然语文成绩相同，但是姓名都不同，不会被去重
+
+# 使用表达式对查询的列进行运算
+-- 1. 统计每个学生的总分
+SELECT `name`, (chinese + english + math) FROM student;
+-- 2. 在所有学生总分上加10分，设置别名表示 name 和 总分成绩
+SELECT `name` AS '姓名', (chinese + english + math + 10) AS '总分' FROM student;
+
+
+# 使用where子句，进行过滤查询
+-- 1. 查询姓名为林黛玉的学生成绩
+SELECT * FROM student WHERE `name` = '林黛玉';
+-- 2. 查询语文成绩大于90分的同学
+SELECT * FROM student WHERE chinese > 90;
+-- 3. 查询总分大于260分的所有同学
+SELECT * FROM student WHERE (chinese+english+math) > 260;
+-- 4. 查询数学大于60并且语文大于85的学生成绩
+SELECT * FROM student WHERE math > 60 AND chinese > 85;
+-- 5. 查询数学成绩大于语文成绩的同学
+SELECT * FROM student WHERE math > chinese;
+-- 6. 查询总分大于240分 并且 数学成绩小于语文成绩的姓贾的学生
+--	'林%' 表示 名字中以林开头就可以
+SELECT *, (chinese+math+english) AS total_score FROM student 
+	WHERE (math+chinese+english) > 240 AND math < chinese AND `name` LIKE '林%';
+
+# 查询语文成绩在80~90之间的学生	between and 是闭区间[]
+SELECT * FROM student WHERE chinese BETWEEN 80 AND 90;
+# 查询数学分数为 89,90,91 的同学
+SELECT * FROM student WHERE math IN (89, 90, 91);
+# 查询所有姓贾的学生成绩
+SELECT * FROM student WHERE `name` LIKE '贾%';
+# 查询数学>80 或 语文>90的学生
+SELECT * FROM student WHERE math > 80 OR chinese > 90;
+
+
+## order by 子句排序查询
+-- 1. 对语文成绩排序后输出[升序]
+SELECT * FROM student ORDER BY chinese ASC;	-- 默认即升序
+-- 2. 对总分按从高到低的顺序输出
+SELECT `name`, (chinese + math + english) AS total_score FROM student 
+	ORDER BY total_score DESC;	-- 使用别名排序
+-- 3. 对姓贾的学生成绩排序输出(升序)
+SELECT `name`, (chinese+math+english) AS total_score FROM student 
+	WHERE `name` LIKE '贾%' ORDER BY total_score ASC;	-- 起别名后，排序也可以按照 (chinese+...)来
+```
+
+#### 统计相关函数
+
+- `count`返回行的总数
+    - ![count](MySQL/imgs/img_30.png)
+- `sum`返回满足`where`条件的行的和，一般使用在数值列
+    - ![sum](MySQL/imgs/img_31.png)
+- `avg`函数返回满足`where`条件的一列的平均值
+    - ![avg](MySQL/imgs/img_32.png)
+- `max/min`返回满足`where`条件的一列的最大/最小值
+    - ![max/min](MySQL/imgs/img_33.png)
+
+```mysql
+# 演示mysql的统计函数的使用
+-- 1. 统计一个班级中有多少学生
+SELECT COUNT(*) FROM student;
+-- 2. 统计语文大于90的学生人数
+SELECT COUNT(*) FROM student WHERE chinese > 90;
+-- 3. 统计总分大于250的人数
+SELECT COUNT(*) FROM student WHERE (chinese+math+english) > 250;
+
+/* count(*) 和 count(列名) 的区别
+-- count(*)：返回满足条件的记录的行数
+-- ocunt(列名)：统计满足条件的某列有多少个，但是会排序值为 NULL 的
+*/
+CREATE TABLE t1 (
+	`name` VARCHAR(10));
+INSERT INTO t1 VALUES ('tom'), ('jack'), (NULL);
+SELECT * FROM t1;
+SELECT COUNT(*), COUNT(`name`) FROM t1;	-- 3 2
+
+# 演示sum函数的使用
+-- 统计班级数学总成绩
+SELECT SUM(math) FROM student;
+-- 统计班级各科的总成绩
+SELECT SUM(math), SUM(english), SUM(chinese) FROM student;
+-- 统计班级总成绩的和
+SELECT SUM(chinese+math+english) FROM student;
+-- 统计一个班级语文的平均成绩
+SELECT SUM(chinese) / COUNT(*) FROM student;
+
+# 演示 avg 的使用
+-- 求班级语文平均分
+SELECT AVG(chinese) FROM student;
+-- 求班级总成绩平均分
+SELECT AVG(chinese+math+english), SUM(chinese+math+english)/COUNT(*) FROM student;
+
+# 演示 max/min 使用
+-- 求班级总分的最高分和最低分
+SELECT MAX(math+chinese+english), MIN(chinese+math+english) FROM student;
+-- 求出班级语文最高分和最低分
+SELECT MAX(chinese), MIN(chinese) FROM student;
+```
+
+- `group by`对列进行分组
+    - ![group by](MySQL/imgs/img_34.png)
+    - group by用于对查询的结果分组统计
+- `having`对分组后的结果进行过滤
+    - ![having](MySQL/imgs/img_35.png)
+    - having子句用于限制分组显示结果
+
+```mysql
+# 演示 group by + having 使用
+CREATE TABLE dept( /*部门表*/
+	deptno MEDIUMINT   UNSIGNED  NOT NULL  DEFAULT 0,
+	dname VARCHAR(20)  NOT NULL  DEFAULT '',
+	loc VARCHAR(13) NOT NULL DEFAULT ''
+	);
+INSERT INTO dept VALUES 
+	(10, 'accounting', 'NEW YORK'), 
+	(20, 'RESEARCH', 'DALLAS'),
+	(30, 'SALES', 'CHICAGO'),
+	(40, 'OPERATIONS', 'BOSTON');
+SELECT * FROM dept;
+
+#创建表EMP雇员
+CREATE TABLE emp
+(empno  MEDIUMINT UNSIGNED  NOT NULL  DEFAULT 0, /*编号*/
+ename VARCHAR(20) NOT NULL DEFAULT '', /*名字*/
+job VARCHAR(9) NOT NULL DEFAULT '',/*工作*/
+mgr MEDIUMINT UNSIGNED,/*上级编号*/
+hiredate DATE NOT NULL,/*入职时间*/
+sal DECIMAL(7,2)  NOT NULL,/*薪水*/
+comm DECIMAL(7,2),/*红利*/
+deptno MEDIUMINT UNSIGNED NOT NULL DEFAULT 0 /*部门编号*/
+) ;
+-- 添加测试数据
+INSERT INTO emp VALUES(7369, 'SMITH', 'CLERK', 7902, '1990-12-17', 800.00, NULL, 20), 
+(7499, 'ALLEN', 'SALESMAN', 7698, '1991-2-20', 1600.00, 300.00, 30),  
+(7521, 'WARD', 'SALESMAN', 7698, '1991-2-22', 1250.00, 500.00, 30),  
+(7566, 'JONES', 'MANAGER', 7839, '1991-4-2', 2975.00,NULL,20),  
+(7654, 'MARTIN', 'SALESMAN', 7698, '1991-9-28',1250.00,1400.00,30),  
+(7698, 'BLAKE','MANAGER', 7839,'1991-5-1', 2850.00,NULL,30),  
+(7782, 'CLARK','MANAGER', 7839, '1991-6-9',2450.00,NULL,10),  
+(7788, 'SCOTT','ANALYST',7566, '1997-4-19',3000.00,NULL,20),  
+(7839, 'KING','PRESIDENT',NULL,'1991-11-17',5000.00,NULL,10),  
+(7844, 'TURNER', 'SALESMAN',7698, '1991-9-8', 1500.00, NULL,30),  
+(7900, 'JAMES','CLERK',7698, '1991-12-3',950.00,NULL,30),  
+(7902, 'FORD', 'ANALYST',7566,'1991-12-3',3000.00, NULL,20),  
+(7934,'MILLER','CLERK',7782,'1992-1-23', 1300.00, NULL,10);
+SELECT * FROM emp;
+
+#工资级别表
+CREATE TABLE salgrade
+(
+grade MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,	/*工资级别*/
+losal DECIMAL(17,2)  NOT NULL,	/*该级别的最低工资*/
+hisal DECIMAL(17,2)  NOT NULL	/*该级别的最高工资*/
+);
+
+#测试数据
+INSERT INTO salgrade VALUES (1,700,1200);
+INSERT INTO salgrade VALUES (2,1201,1400);
+INSERT INTO salgrade VALUES (3,1401,2000);
+INSERT INTO salgrade VALUES (4,2001,3000);
+INSERT INTO salgrade VALUES (5,3001,9999);
+SELECT * FROM salgrade;
+
+
+-- 1. 如何显示每个部分的平均工资和最高工资
+-- 	按照部分来分组查询
+SELECT AVG(sal), MAX(sal), deptno FROM emp GROUP BY deptno;
+-- 2. 显示每个部门的每种岗位的平均工资和最低工资
+SELECT AVG(sal), MIN(sal), deptno, job FROM emp GROUP BY deptno, job;
+-- 3. 显示平均工资低于2000的部分号和平均工资
+/*
+	化繁为简，各个击破
+	1. 显示各个部门的平均工资和部分号
+	2. 在1的结果基础商，进行过滤，保留 avg(sal) < 2000，对分组后结果过滤 使用having
+	3. 使用别名进行过滤
+*/
+SELECT deptno, AVG(sal) AS avg_sal FROM emp GROUP BY deptno HAVING avg_sal < 2000;
+```
+
+#### 字符串相关函数
+
+- ![字符串相关函数](MySQL/imgs/img_36.png)
+
+```mysql
+# 演示 字符串相关函数
+-- charset(str) 返回字符串字符集
+SELECT CHARSET(ename) FROM emp;
+-- concat() 连接字符串
+SELECT CONCAT(ename, ' job is ', job) FROM emp;
+-- instr (string, substring) 返回 substring 在 string 中出现的位置，没有则返回0
+# DUAL：亚元表，系统表用于测试
+SELECT INSTR ('hanshunping', 'ping') FROM DUAL;	# 8
+
+-- ucase 转成大写 lcase 转成小写
+SELECT UCASE(ename), LCASE(ename) FROM emp;
+
+-- left(string, length) 从string中的左边起取出length个字符 right从右边取
+SELECT LEFT(ename, 2) FROM emp;
+
+-- length(str) string长度，按照字节
+SELECT LENGTH(ename) FROM emp;	-- length('李自成') 3*3=9
+
+-- replace(str, search_str, replace_str) 在str中用search_str替换search_str
+-- 			查找job，如果是 MANAGER 就替换为 经理
+SELECT ename, REPLACE(job, 'MANAGER', '经理') FROM emp;
+
+-- strcmp(str1, str2) 逐字符比较两字符串大小
+SELECT STRCMP('asp', 'hsp') FROM DUAL;	-- -1
+
+-- substring(str, position, [, length]) 从str的position位置开始[从1开始计算]，取length个字符
+SELECT SUBSTRING(ename, 1, 2) FROM emp;
+
+-- ltrim rtrim trim 取出前端或后端或左右两端的空格
+SELECT LTRIM(' 李自成') FROM DUAL;
+SELECT RTRIM('李自成  ') FROM DUAL;
+SELECT TRIM('  李自成 ') FROM DUAL;
+
+# 练习：以首字母小写的方式显示所有员工emp的姓名：两种方式
+SELECT CONCAT(LCASE(SUBSTRING(ename, 1, 1)), SUBSTRING(ename, 2)) AS `name` FROM emp;
+SELECT CONCAT(LCASE(LEFT(ename, 1)), SUBSTRING(ename, 2)) AS name2 FROM emp;
+```
+
+#### 数学相关函数
+
+- ![math](MySQL/imgs/img_37.png)
+
+```mysql
+# 演示数学相关函数
+-- abs 绝对值
+SELECT ABS(-12) FROM DUAL;
+-- bin(decimal_number) 十进制转二进制
+
+SELECT BIN(10) FROM DUAL;	-- 1010
+-- hex(DecimalNumber) 转十六进制
+-- conv(num1, from_base, to_base) 进制转换，从 from_base 到 to_base
+--	将10进制8转为2进制 -> 1000
+SELECT CONV(8, 10, 2) FROM DUAL;
+-- ceiling(num) 向上取整，得到比num大的最小整数
+
+SELECT CEILING(1.2), CEILING(-1.2) FROM DUAL;	-- -2 -1
+-- floor(num) 向下取整，得到比num小的最大整数
+SELECT FLOOR(1.1) FROM DUAL; -- 1
+
+-- format(num, decimal_places) 保留小数位数(四舍五入)
+SELECT FORMAT(3.1415926, 2) FROM DUAL; -- 3.14
+SELECT FORMAT(3.1415926, 3) FROM DUAL; -- 3.142
+
+-- least(num1, num2 [,...]) 求最小值
+SELECT LEAST(0, -1, 10, 3) FROM DUAL;
+
+-- mode(numerator, denominator) 求余
+SELECT MOD(10, 3) FROM DUAL;	-- 1
+
+-- rand([seed]) 返回随机数，起范围为 [0, 1]
+--	如果设计随机种子，相同的随机种子每次产生值固定
+SELECT RAND(2) FROM DUAL;
+```
+
+#### 时间日期相关函数
+
+- ![img_38.png](MySQL/imgs/img_38.png)
+
+| ![img_39.png](MySQL/imgs/img_39.png) | ![img_40.png](MySQL/imgs/img_40.png) | ![img_41.png](MySQL/imgs/img_41.png) |
+|---------------------------|---------------------------|---------------------------|
+
+```mysql
+# 日期时间相关函数
+
+SELECT CURRENT_DATE() FROM DUAL; -- 当前日期：2023-12-25
+SELECT CURRENT_TIME() FROM DUAL; -- 当前时间：16:32:02
+SELECT CURRENT_TIMESTAMP() FROM DUAL; -- 当前时间戳：2023-12-25 16:32:14
+
+-- 创建测试表：信息表
+CREATE TABLE mes (
+	id INT,
+	content VARCHAR(30),
+	send_time DATETIME);
+-- 添加一条记录
+INSERT INTO mes VALUES (1, '北京新闻', CURRENT_TIMESTAMP());
+INSERT INTO mes VALUES (2, '上海新闻', NOW());
+INSERT INTO mes VALUES (3, '广州新闻', NOW());
+SELECT * FROM mes;
+
+-- 1. 显示所有新闻信息，发布日期只显示日期，不用显示时间
+SELECT id, content, DATE(send_time) FROM mes;
+-- 2. 查询在10分钟内发布的新闻
+--				发送日期加10分钟超过现在时间，就表示发送时间是在10分钟内
+SELECT * FROM mes WHERE DATE_ADD(send_time, INTERVAL 10 MINUTE) >= NOW();
+SELECT * FROM mes WHERE send_time >= DATE_SUB(NOW(), INTERVAL 10 MINUTE);
+-- 3. 请在mysql的sql语句中求出 2011-11-11 和 1990-1-1 相差天数
+SELECT DATEDIFF('2011-11-11', '1990-1-1') FROM DUAL; -- 7984
+-- 4. 用sql语句求出你活了多少天
+SELECT DATEDIFF(CURRENT_DATE(), '2001-3-12') FROM DUAL; -- 8323
+-- 如果你能活90岁，i去除你还能活多少天
+-- 思路：以出生日期加90年得到死亡日期；在计算死亡日期到今天的时间差
+SELECT DATEDIFF(DATE_ADD('2001-3-12 10:15:6', INTERVAL 90 YEAR), NOW()) FROM DUAL; -- 24549
+-- timediff(date1, date2) 两个时间差(多少消失多少分钟多少秒)
+SELECT TIMEDIFF('16:45:00', CURRENT_TIME()) FROM DUAL;
+
+# 年月日
+SELECT YEAR(NOW()) FROM DUAL;
+SELECT MONTH(NOW()) FROM DUAL;
+SELECT DAY(NOW()) FROM DUAL;
+-- unix_timestamp 返回1970-1-1 到现在的秒数
+SELECT UNIX_TIMESTAMP() FROM DUAL;
+-- from_unixtime() 把一个unix_timestamp秒数[时间戳]，转成指定格式的日期
+-- 	在开发中，可以存放一个整数，然后表示时间，通过 from_unixtime 转换
+--	在实际开发中，也经常使用 int 保存一个 unix_timestanp 时间戳
+SELECT FROM_UNIXTIME(UNIX_TIMESTAMP(), '%Y-%m-%d %H:%i:%s') FROM DUAL;
+```
+
+#### 加密函数和系统函数
+
+- ![img_42.png](MySQL/imgs/img_42.png)
+
+```mysql
+# 演示加密函数和系统函数
+-- user() 查询当前是哪个用户在使用数据库
+-- 可以查看登录到mysql的有些用户，以及登录的IP
+SELECT USER() FROM DUAL;	-- 用户名@IP地址
+-- database() 查询当前使用的数据库
+SELECT DATABASE();
+
+-- md5(str) 为字符串算出一个mds 32的字符串，常用加密
+--	root密码是 hsp -> md5加密 -> 在数据库中存放的是加密后的密码
+SELECT MD5('hsp') FROM DUAL;
+SELECT LENGTH(MD5('hsp')) FROM DUAL; -- 32
+
+-- 演示用户表，存放密码时，是md5
+CREATE TABLE users (
+	id INT,
+	`name` VARCHAR(32) NOT NULL DEFAULT '',
+	pwd CHAR(32) NOT NULL DEFAULT ''
+	);
+INSERT INTO users VALUES (100, '李自成', MD5('lzc'));
+SELECT * FROM users;
+SELECT * FROM users WHERE `name` = '李自成' AND pwd = MD5('lzc');
+-- password(str) 加密函数，Mysql数据库的用户密码就是 PASSWORD函数加密
+SELECT PASSWORD('hsp');
+SELECT LENGTH(PASSWORD('hsp'));	-- 41
+-- 查看数据库mysql中表user下用户信息
+SELECT * FROM mysql.user WHERE `user` = 'root';
+```
+
+#### 流程控制函数
+
+- ![img_43.png](MySQL/imgs/img_43.png)
+
+```mysql
+# 演示流程控制语句
+-- if(expr1, expr2, expr3) 如果表达式1为True，则返回expr2，否则返回expr3
+SELECT IF(TRUE, '北京', '上海') FROM DUAL;
+-- inull(expr1, expr2) 如果1不为空NULL，则返回expr1，否则返回expr2
+SELECT IFNULL(NULL, 'hsp'); -- hsp
+-- select case where expr1 then expr2 when expr3 then expr4 end;
+SELECT CASE WHEN TRUE THEN 'jack' WHEN FALSE THEN 'tom' ELSE 'smith' END;
+
+-- 1. 查询emp表，如果comm为null，则显示0.0
+-- 		强调：判断是否为null，要用 is / is not
+SELECT ename, IF(comm IS NULL, 0.0, comm) FROM emp;
+-- 2. 如果emp表的job是 clerk 则显示职员，如果是 manager 则显示经理，如果是 SALESMAN 则显示销售人员
+-- select charset(job) from emp; -- utf8
+SELECT ename, 
+	(SELECT CASE WHEN job='clerk' THEN '职员' 
+		WHEN job='manager' THEN '经理' 
+		WHEN job='salesman' THEN '销售人员'
+		ELSE job END) AS 'career', job 
+	FROM emp;
+```
+
+#### mysql表查询-加强
+
+```mysql
+-- 查询加强
+SELECT * FROM emp;
+SELECT * FROM dept;
+SELECT * FROM salgrade;
+
+-- 1. 查询1992.1.1后入职的员工
+-- 	在mysql中，日期类型数据可以直接比较
+SELECT * FROM emp WHERE hiredate > '1992-1-1';
+-- 2. 使用 like 操作符(模糊)查询
+--	%：表示0到多个字符
+--	_：表示单个任意字符
+# 查询首字母为S的员工姓名和工资
+SELECT ename, sal FROM emp WHERE ename LIKE 'S%';
+# 查询第三个字符为大写o的所有员工的姓名和工资
+SELECT ename, sal FROM emp WHERE ename LIKE '__O%';
+
+# 查询没有上级的雇员情况
+SELECT * FROM emp WHERE mgr IS NULL;
+# 查询表结构
+DESC emp;
+
+# order by
+-- 按照工资从低到高的顺序[升序] 显示雇员信息
+SELECT * FROM emp ORDER BY sal ASC;
+-- 按照部分号升序而雇员工资降序排序，显示员工信息
+SELECT * FROM emp ORDER BY deptno ASC, sal DESC;
+```
+
+- ![img_44.png](MySQL/imgs/img_44.png)
+- 推导公式：`select * from table_name order by empno limit (页数-1)*每页行数, 每页行数`
+
+```mysql
+# 分页查询
+-- 按照雇员id号升序取出，每页显示3条记录，请分别显示 第1页 第2页 第3页
+-- 基本语法：select ... from table_name order by field1 asc limit start, rows;
+--	表示从 start+1 行开始取，取出 rows 行，start 从0开始计算
+-- 推导公式：limit (页数-1)*行数, 行数
+SELECT * FROM emp;
+-- 第1页
+SELECT * FROM emp 
+	ORDER BY empno
+	LIMIT 0, 3;
+-- 第2页
+SELECT * FROM emp 
+	ORDER BY empno
+	LIMIT 3, 3;
+-- 第3页
+SELECT * FROM emp 
+	ORDER BY empno
+	LIMIT 6, 3;
+-- 第5页
+SELECT * FROM emp ORDER BY empno LIMIT 12, 3;
+
+-- 练习：按照雇员empno号降序取出，每页显示5条记录。请分别显示 第3页 第5页 对应sql语句
+SELECT * FROM emp ORDER BY empno DESC LIMIT 10, 5;
+SELECT * FROM emp ORDER BY empno DESC LIMIT 20, 5;
+```
+
+- ![img_45.png](MySQL/imgs/img_45.png)
+-
+- `select deptno, avg(sal) as avg_sal from emp group by deptno having avg_sal > 1000 order by avg_sal desc limit 0, 2;`
+    1. `group by`
+    2. `having`
+    3. `order by`
+    4. `limit`
+
+```mysql
+# 增强 group by 的使用
+SELECT * FROM emp;
+-- 1. 显示每种岗位的雇员总数、平均工资
+SELECT COUNT(*) FROM emp;
+SELECT job, COUNT(*), FORMAT(AVG(sal), 2) FROM emp 
+	GROUP BY job;
+-- 2. 显示雇员总数，以及获得补助的雇员数
+-- 提示：获得补助即 comm is not null;
+-- count(comm)：只统计comm列非空的
+SELECT COUNT(*), COUNT(comm) FROM emp;
+-- 统计没有获得补助的
+-- if(comm is null, 1, null); 如果comm为null，返回1(非空值即可，会统计)，否则返回 null
+SELECT COUNT(*), COUNT(IF(comm IS NULL, 1, NULL)) FROM emp;
+-- 3. 显示管理者的总人数
+SELECT COUNT(DISTINCT mgr) FROM emp; -- 5
+-- 4. 显示雇员工资的最大差额
+SELECT MAX(sal) - MIN(sal) FROM emp; -- 4200
+
+# 统计各个部分(group by)的平均工资，并且是(having)大于1000的，
+-- 并且按照平均工资从高到低排序(order by)，取出前两行记录(limit)
+SELECT deptno, AVG(sal) AS avg_sal 
+	FROM emp 
+	GROUP BY deptno 
+	HAVING avg_sal > 1000 
+	ORDER BY avg_sal DESC 
+	LIMIT 0, 2;
+
+-- 错误，查询列没有包含在 group by 子句中，并且这些列没有使用聚合函数(如 sum, avg等)
+SELECT deptno, job FROM emp GROUP BY deptno;
+# 1. 将非聚合列添加到 group by 子句中
+SELECT deptno, job FROM emp GROUP BY deptno, job;
+# 2. 对非分组列使用聚合函数
+SELECT deptno, COUNT(job) FROM emp GROUP BY deptno;
+```
+
+#### 多表查询
+
+- **多表查询**是指基于两个和两个以上的表查询。在实际应用中，查询单个表可能不能满足你的需求。
+- `select * from emp, dept;`
+    - 在默认情况下，当两个表查询时，规则：
+        1. 从第1张表中取出一行和第2张表的每一行进行组合，返回结果[含有两张表的所有列]
+        2. 共返回：第1张表行数*第2张表行数，即13 * 4
+        3. 这样多表查询默认处理方式，称为**笛卡尔积**
+        4. 解决多表的关键就是写出正确的过滤条件 `where`，需要进行分析
+    - ![img_46.png](MySQL/imgs/img_46.png)
+- `select * from emp;`
+    - ![img_47.png](MySQL/imgs/img_47.png)
+- `select * from dept;`
+    - ![img_48.png](MySQL/imgs/img_48.png)
+
+```mysql
+# 多表查询
+-- 查询雇员名、雇员工资及所在部门的名字
+/*
+1. 雇员名、雇员工资 来自 emp 表
+2. 部门名字 来自 dept 表
+3. 需求对 emp 和 depy 查询
+4. 当需要指定显示莫格表的某列时，需要使用：表.列名
+5. 提示：多表查询的条件不能少于 表的个数-1，否则会出现笛卡尔积
+*/
+SELECT * FROM emp, dept;
+SELECT * FROM emp;
+SELECT * FROM dept;
+SELECT * FROM salgrade;
+
+SELECT ename, sal, dname FROM emp, dept 
+	WHERE emp.deptno = dept.deptno;
+-- 查询部门号为10的部门名、员工名和工资
+SELECT dname, ename, sal FROM emp, dept
+	WHERE emp.deptno = dept.deptno AND emp.deptno = 10;
+-- 显示各个员工的姓名、工资及其工资的级别
+SELECT ename, sal, grade
+	FROM emp, salgrade -- 也可以不加表名，因为两表无相同列名
+	WHERE emp.sal BETWEEN salgrade.losal AND salgrade.hisal;
+-- 显示雇员名、雇员工资及所在部门的名字，并按部门排序[降序排]
+SELECT ename, sal, dname
+	FROM emp, dept
+	WHERE emp.deptno = dept.deptno
+	ORDER BY emp.deptno DESC;
+```
+
+- **自连接**：在同一张表的连接查询[将同一张表看作两张表]
+
+```mysql
+# 多表查询：自连接
+-- 显示公司公司员工和他的上级的名字
+/*
+员工名字和其上级名字都在 emp
+员工和上级是通过 dept 的 mgr列关联的
+1. 把同一张表当作两张表使用
+2. 需要给表取别名： from 表名 表别名
+3. 如果列名不明确，可以指定列的别名： 列名 as 列别名
+*/
+SELECT worker.ename AS '职员名', boss.ename AS '上级名' 
+	FROM emp AS worker, emp boss	-- 自连接需要设置别名，否则会报错
+	WHERE worker.mgr = boss.empno;
+```
+
+#### 表子查询
+
+- **子查询**是指嵌入在其它sql语句中的select语句，也叫嵌套查询
+- 单行子查询：只返回一行数据的子查询语句
+- 多行子查询：返回多行数据的子查询，使用关键字 `IN`
+- 还可以将子查询的结果当作一个新表，可以解决很多问题
+
+```mysql
+# 子查询演示
+-- 显示与SMITH同一个部分的所有员工
+/*
+1. 先查询到SMITH的部门号
+2. 把上面的select语句当作一个子查询来使用
+*/
+SELECT deptno 
+	FROM emp
+	WHERE ename = 'SMITH';
+-- 单行子查询
+SELECT * FROM emp
+	WHERE deptno = (
+	SELECT deptno 
+		FROM emp
+		WHERE ename = 'SMITH'	
+	);
+-- 查询和部门10的工作相同的雇员的名字、岗位、工资、部门号，但是不含10号部门自己的员工
+/*
+1. 查询10号部门有哪些工作
+2. 把上面查询的结果当作子查询使用
+*/
+SELECT DISTINCT job FROM emp WHERE deptno = 10; # 10号部门的工作
+-- 多行子查询：IN
+SELECT ename, job, sal, deptno 
+	FROM emp
+	WHERE job IN (SELECT DISTINCT job FROM emp WHERE deptno = 10)
+		AND deptno <> 10;
+
+-- 查询每个部门高于该部门平均工资的员工
+# 将子查询的结果作为一张新表，可以解决很多很多问题
+SELECT deptno, AVG(sal) FROM emp GROUP BY deptno; -- 查询每个部门的员工平均工资
+SELECT ename, job, sal, emp.deptno, avg_sal
+	FROM emp, (SELECT deptno, AVG(sal) AS avg_sal FROM emp GROUP BY deptno) temp -- 新表别名 temp
+	WHERE emp.deptno = temp.deptno AND emp.sal > temp.avg_sal;
+```
+
+- `any` 和 `all` 操作符
+
+```mysql
+# 在多行子拆线呢中使用all和any操作符
+-- 显示工资比部门30的所有员工的工资高的员工的姓名、工资和部门号
+SELECT MAX(sal) FROM emp WHERE deptno = 30;
+-- 使用 max
+SELECT ename, sal, deptno FROM emp WHERE sal > (SELECT MAX(sal) FROM emp WHERE deptno = 30);
+-- 使用 all操作符
+SELECT ename, sal, deptno FROM emp WHERE sal > ALL(SELECT sal FROM emp WHERE deptno = 30);
+-- 显示比30号部门其中的一个员工的工资高的员工的姓名、工资和部门号
+-- 可以使用 any 也可以使用 min
+SELECT ename, sal, deptno FROM emp WHERE sal > ANY(SELECT sal FROM emp WHERE deptno = 30);
+```
+
+- 多列子查询是指查询返回多个列数据的子查询语句
+
+```mysql
+# 多列子查询
+-- 查询与allen的部门和岗位完全相同的所有雇员(并且不包含smithj本人)
+-- (field1, field2...) = (select field1, field2 from ...)
+/*
+1. 得到smith的部门和岗位
+2. 把上面的查询当作子查询来使用，并且使用多列子查询的语法进行匹配
+*/
+SELECT deptno, job FROM emp
+	WHERE ename = 'allen';
+SELECT * FROM emp
+	WHERE (deptno, job) = (
+		SELECT deptno, job 
+		FROM emp
+		WHERE ename = 'allen'
+	) AND ename <> 'allen';
+-- select * from stu
+-- 	where (math, english, chinese) = (
+-- 		select math, english, chinese from stu where `name` = '宋江'
+-- 	) and `name` <> '宋江';
+```
+
+- [多表子查询练习](MySQL/sql/subquery_exercise.sql)
+
+```mysql
+# 子查询练习
+-- 1. 查询每个部门工资高于本部门平均工资的人的资料
+SELECT AVG(sal) FROM emp 
+	GROUP BY deptno;
+SELECT  emp.deptno, ename, sal, temp.avg_sal
+	FROM emp, (SELECT deptno, AVG(sal) AS avg_sal FROM emp GROUP BY deptno) AS temp
+	WHERE emp.deptno = temp.deptno AND emp.sal > avg_sal;
+-- 2. 查找每个部门工资最高的人的详细资料
+SELECT ename, job, sal, emp.deptno, max_sal
+	FROM emp, (SELECT deptno, MAX(sal) AS max_sal FROM emp GROUP BY deptno) AS tmp
+	WHERE emp.deptno = tmp.deptno AND emp.sal = tmp.max_sal;
+-- 3. 查询每个部门的信息(包括：部门名、编号、地址)和人员数量
+/*
+1. 部门名、编号、地址 来自 dept表
+2. 各个部门的人员数量 -> 构架一个临时表
+*/
+SELECT deptno, COUNT(*) FROM emp GROUP BY deptno; -- 按deptnp分组，查询到每个部门的人数
+SELECT  dept.deptno, dname, loc, emp_num AS '人数'
+	FROM dept, (SELECT deptno, COUNT(*) AS emp_num FROM emp GROUP BY deptno) AS tmp
+	WHERE dept.deptno = tmp.deptno;
+-- 还有一种写法：dept.* 表示将该表所有列都显示出来
+-- 在多表查询时，当多个表的列不重复时，才可以直接写列名
+SELECT  dept.*, emp_num AS '人数'
+	FROM dept, (SELECT deptno, COUNT(*) AS emp_num FROM emp GROUP BY deptno) AS tmp
+	WHERE dept.deptno = tmp.deptno;
+```
+
+#### 表复制
+
+- 自我复制数据(蠕虫复制)，有时为了对某个sql语句进行效率测试，需要海量数据时，可以使用此法为表创建海量数据
+- `create table my_tab like emp;`创建与表emp结构相同的表
+- `insert into my_table (select * from my_table)`表自我复制
+
+```mysql
+# 表复制
+CREATE TABLE my_tab01 (
+	id INT,
+	`name` VARCHAR(32),
+	sal DOUBLE,
+	job VARCHAR(32),
+	deptno INT
+	);
+DESC my_tab01;
+SELECT * FROM my_tab01;
+
+-- 演示如何自我复制
+-- 1. 先把 emp表 的记录复制到 my_tab01
+INSERT INTO my_tab01(id, `name`, sal, job, deptno)	-- 不需要写 values
+	(SELECT empno, ename, sal, job, deptno FROM emp);
+-- 2. 自我复制
+INSERT INTO my_tab01
+	SELECT * FROM my_tab01;
+SELECT COUNT(*) FROM my_tab01;
+# 如何删除掉一张表的重复记录
+-- 1. 先创建一张表 my_tab02
+-- 2. 让 my_tab02 有重复的记录
+CREATE TABLE my_tab02 LIKE emp;	-- 表示把 emp表的结构(列)，复制到my_tab02
+DESC my_tab02;
+INSERT INTO my_tab02
+	SELECT * FROM emp;
+SELECT * FROM my_tab02;
+-- 3. 考虑去重
+/* 思路
+1. 先创建一张临时表 my_tmp，该表的结构和 my_tab02 一样
+2. 把 my_tmp 记录，通过distinct关键字处理后，把记录复制到my_tmp;
+3. 删除掉 my_tab02 记录
+4. 把 my_tmp 表的记录复制到 my_tab02
+*/
+CREATE TABLE my_tmp LIKE my_tab02;
+INSERT INTO my_tmp 
+	(SELECT DISTINCT * FROM my_tab02);
+-- 清除掉 my_tab02 记录
+-- delete from my_tab02;
+DROP TABLE my_tab02;	-- 直接删除表
+RENAME TABLE my_tmp TO my_tab02; -- 再改名
+SHOW TABLES;
+SELECT * FROM my_tab02;
+```
+
+#### 合并查询
+
+- 有时在实际应用中，为了合并多个 `select` 语句的结果，可以使用集合操作符号 `union`, `union all`
+- `union all`该操作符用于确得两个结果集的并集。当使用该操作符时，不会取消重复行
+- `union` 会去重
+
+```mysql
+# 合并查询
+SELECT ename, job FROM emp WHERE sal > 2500;
+SELECT ename, sal, job FROM emp WHERE job = 'MANAGER';
+-- 1. union all 就是将两个查询结果合并，不会去重
+SELECT ename, sal, job FROM emp WHERE sal > 2500 UNION ALL
+	SELECT ename, sal, job FROM emp WHERE job = 'MANAGER';
+-- 2. union 效果同上，但会去重
+SELECT ename, sal, job FROM emp WHERE sal > 2500 UNION
+	SELECT ename, sal, job FROM emp WHERE job = 'MANAGER';
+```
+
+#### mysql表外连接
+
+- ![img_49.png](MySQL/imgs/img_49.png)
+- 外连接
+    - 左外连接：左侧的表完全显示。
+        - `select * from 表1 left join 表2 on 条件`
+        - 表1就是左表，表2就是右表
+    - 右外连接：右侧的表完全显示
+        - `select * from 表1 right join 表2 on 条件`
+        - 表1还是左表，表2还是右表
+
+> 在实际开发中，绝大多数情况下使用的是多表查询内连接即 `select * from emp, dept where ...;` 这种
+
+```mysql
+# 外连接
+-- 列出部分名称和这些部门的员工名称和工作，要求同时显示出那些没有员工的部门
+SELECT dname, ename, job FROM emp, dept
+	WHERE emp.deptno = dept.deptno; -- 这个无法查到没有员工的部门
+
+-- 创建 stu
+CREATE TABLE stu (
+	id INT,
+	`name` VARCHAR(32)
+);
+INSERT INTO stu VALUES (1, 'jack'), (2, 'tom'), (3, 'kiki'), (4, 'vivo');
+SELECT * FROM stu;
+/* 创建 exam
+id grade
+1 56
+2 76
+*/
+CREATE TABLE exam (
+	id INT,
+	grade INT
+);
+INSERT INTO exam VALUES (1, 56), (2, 76), (11, 8);
+SELECT * FROM exam;
+-- 1. 使用左连接，显示所有人的成绩，如果没有成绩，也要显示该人的姓名和id号
+SELECT `name`, stu.id, grade FROM stu, exam
+	WHERE stu.id = exam.id; -- 只会取两张表的交集部分
+-- 改为外连接
+SELECT `name`, stu.id, grade
+	FROM stu LEFT JOIN exam
+	ON stu.id = exam.id;
+-- 2. 使用右连接，显示所有成绩，如果没有匹配的名字，就显示空
+-- 即：右边的表exam和坐标没有匹配的记录，也会把右表的记录显示出来
+SELECT  stu.id, `name`, grade
+	FROM stu RIGHT JOIN exam
+	ON stu.id = exam.id;
+# 显示部门名称和部门的员工信息(名字和工作)，同时列出那些没有员工的部门
+/* 分析
+1. 同时显示那些没有员工的部门，即要求部门信息全部显示
+*/
+SELECT dname, ename, job FROM emp RIGHT JOIN dept
+	ON emp.deptno = dept.deptno; -- 右外连接
+SELECT dname, ename, job FROM dept LEFT JOIN emp
+	ON dept.deptno = emp.deptno; -- 左外连接
+```
+
+### 约束
+
+- 约束用于确保数据库的数据满足特定的业务
+- `primary key`(主键)
+    1. primary key 不可以重复，也不能为空
+    2. 一张表中最多只能有一个主键，但可以是复合主键(比如id+name)
+    3. 主键指定的方式有两种
+        1. 直接在字段名后面指定 field primary key
+        2. 在表定义最后写 primary key (列名);
+    4. 使用 `desc 表名;` 可以查看主键的情况，看到Key列有多个PRI表示的是复合主键
+
+```mysql
+# 主键的使用
+-- id name email
+CREATE TABLE t2 (
+	id INT PRIMARY KEY, -- 表示id列是主键
+	`name` VARCHAR(32),
+	email VARCHAR(32)
+);
+-- 主键列的值不可以重复
+INSERT INTO t2 VALUES (1, 'jack', 'jack@sohu,com'), (2, 'tom', 'tom@sohu,com');
+SELECT * FROM t2;
+INSERT INTO t2 VALUES (1, 'hsp', 'hsp@163.com'); # 错误：Duplicate entry '1' for key 'PRIMARY'
+# 主键使用的细节讨论
+/*
+1. primary key 不可以重复，也不能为空
+2. 一张表中最多只能有一个主键，但可以是复合主键(比如id+name)
+3. 主键指定的方式有两种
+	1. 直接在字段名后面指定 field primary key
+	2. 在表定义最后写 primary key (列名);
+*/
+-- 2) 演示复合主键
+CREATE TABLE t3 (
+	id INT,
+	`name` VARCHAR(32),
+	email VARCHAR(32),
+	PRIMARY KEY (id, `name`) -- 这里就是复合主键
+);
+INSERT INTO t3 VALUES (1, 'jack', 'jack@sohu,com'), (2, 'tom', 'tom@sohu,com');
+INSERT INTO t3 VALUES (1, 'hsp', 'hsp@163.com'); -- 正确：复合主键要求只要不全部相同，就可以添加
+INSERT INTO t3 VALUES (1, 'hsp', 'xxx@163.com'); -- 错误：Duplicate entry '1-hsp' for key 'PRIMARY'
+SELECT * FROM t3;
+-- 3) 指定主键
+CREATE TABLE t4 (
+	id INT,
+	`name` VARCHAR(32),
+	email VARCHAR(32),
+	PRIMARY KEY(id)
+);
+-- 使用desc表名，可以查看primary key的情况
+DESC t3;
+```
+
+- `not null`(非空)
+    - `字段名 字段类型 not null` 则必须为列提供数据
+- `unique`(唯一)
+    - 当定义了唯一约束后，该列值是不能重复的
+    - 注意：当没有指定 `not null` 时，`unique`字段可以有多个 `null`
+    - 一张表可以有多个 `unique` 字段
+
+```mysql
+# unique的使用
+CREATE TABLE t5 (
+	id INT UNIQUE, -- 表示id列是不可以重复的
+	`name` VARCHAR(32),
+	email VARCHAR(32)
+);
+INSERT INTO t5 VALUES (1, 'jack', 'jack@163.com');
+INSERT INTO t5 VALUES (1, 'tom', 'tom@sohu.com'); # 错误：Duplicate entry '1' for key 'id'
+-- unique使用细节
+-- 1. 如果没有指定 not null ，则 unique字段可以有多个null
+INSERT INTO t5 VALUES (NULL, 'kiki', 'kiki@sohu,com');
+INSERT INTO t5 VALUES (NULL, 'lily', 'lily@sohu,com');
+SELECT * FROM t5;
+-- 2. 一张表可以有多个unique字段
+CREATE TABLE t6 (
+	id INT UNIQUE,
+	`name` VARCHAR(32) UNIQUE,
+	email VARCHAR(32)
+);
+```
+
+- `foreign key`(外键)
+    - 用于定义主表和从表之间的关系：外键约束要定义在从表上，主表则必须具有主键约束或是 `unique`约束
+    - 当定义外键约束后，要求外键列数据必须在主表的主键列存在或是为`null`
+    - ![外键示意图](MySQL/imgs/img_50.png)
+    - ![img_51.png](MySQL/imgs/img_51.png)
+- `foreign key (本表字段名) references 主表名(主键名或unique字段名)`
+- 外键细节说明
+    1. 外键指向的表的字段，要求是 `primary key` 或者是 `unique`
+    2. 表的类型是 `innodb`，这样的表才支持外键
+    3. 外键字段的类型要和主键字段的类型一致(长度可以不同)
+    4. 外键字段的值，必须在主键字段出现过，或者为 `null`(前提是外键字段允许为null)
+    5. 一旦建立主外键关系，数据就不能随意删除了。要想删除主键数据，必须保障没有从表的数据指向它
+
+```mysql
+# 外键约束
+-- 创建主表 my_class 
+CREATE TABLE my_class (
+	id INT PRIMARY KEY, -- 班级编号
+	`name` VARCHAR(32) NOT NULL DEFAULT ''
+);
+-- 创建从表 my_stu
+CREATE TABLE my_stu (
+	id INT PRIMARY KEY, -- 学生编号
+	`name` VARCHAR(32) NOT NULL DEFAULT '',
+	class_id INT, -- 学生所在班级编号
+	-- 下面指定外键关系
+	FOREIGN KEY(class_id) REFERENCES my_class(id)
+);
+-- 测试数据
+INSERT INTO my_class VALUES (100, 'Java'), (200, 'Web');
+SELECT * FROM my_class;
+INSERT INTO my_stu VALUES (1, 'jack', 100), (2, 'charlie', 200);
+SELECT * FROM my_stu;
+INSERT INTO my_stu VALUES (3, 'hsp', 300); # 失败，因为300班级不存在
+INSERT INTO my_stu VALUES (4, 'lzc', NULL); # 外键的值可以为null，前提是外键允许为空
+-- 一旦建立外键的关系，数据不能随意删除了
+DELETE FROM my_class WHERE id = 100; # 错误，my_stu表有外键指向它
+```
+
+- `check`：强制行数据必须满足的条件
+- ![check](MySQL/imgs/img_52.png)
+
+```mysql
+# check
+-- mysql5.7目前还不支持check，只做语法校验，但不会生效
+CREATE TABLE t6 (
+	id INT PRIMARY KEY,
+	`name` VARCHAR(32) NOT NULL DEFAULT '',
+	gender CHAR(1) CHECK (gender IN ('男', '女')),
+	sal DOUBLE CHECK (sal > 1000 AND sal < 2000)
+);
+INSERT INTO t6 VALUES (1, 'charlie', '男', 8000); -- sal不符合check但仍会添加成功
+```
+
+<hr/>
+
+```mysql
+# 商品收获系统表设计案例
+CREATE DATABASE IF NOT EXISTS shop_db;
+USE shop_db;
+CREATE TABLE goods (
+	goods_id INT PRIMARY KEY,
+	goods_name VARCHAR(64) NOT NULL DEFAULT '',
+	unitprice DECIMAL(10, 2) NOT NULL CHECK (unitprice >= 1.0 AND unitprice <= 9999.99) ,
+	catagory INT NOT NULL DEFAULT 0,
+	provider VARCHAR(16) NOT NULL DEFAULT ''
+);
+CREATE TABLE customer (
+	customer_id INT PRIMARY KEY,
+	`name` VARCHAR(16) NOT NULL DEFAULT '',
+	address VARCHAR(64) NOT NULL DEFAULT '',
+	email VARCHAR(16) UNIQUE NOT NULL,
+	gender ENUM('男', '女') NOT NULL,
+	card_Id CHAR(18) UNIQUE
+);
+CREATE TABLE purchase (
+	order_id INT UNSIGNED PRIMARY KEY,
+	customer_id INT NOT NULL DEFAULT 0,
+	goods_id INT NOT NULL DEFAULT 0,
+	nums INT NOT NULL DEFAULT 0,
+	-- 指定外键关系
+	FOREIGN KEY (customer_id) REFERENCES customer(customer_id),
+	FOREIGN KEY (goods_id) REFERENCES goods(goods_id)
+);
+
+-- drop table goods;
+-- DROP TABLE customer;
+-- DROP TABLE purchase;
+SHOW TABLES;
+```
+
+#### 自增长
+
+- ![img_53.png](MySQL/imgs/img_53.png)
+- 给自增长列数据添加 `null`会自动复制
+- 自增长使用细节
+    1. 一般来说自增长是和 `primary key` 配合使用的
+    2. 自增长也可以单独使用[但是需要配合一个 `unique`]
+    3. 自增长修饰的字段为整数型的(虽然小数也可以但是不推荐使用)
+    4. 自增长默认从1开始，也可以通过命令修改 `alter table 表名 auto_increment = ;`
+    5. 如果添加数据时，给自增长字段指定了值，则以指定值为准。一般不这样来
+
+```mysql
+# 演示自增长的使用
+-- 创建表
+CREATE TABLE t7 (
+	id INT PRIMARY KEY AUTO_INCREMENT,
+	email VARCHAR(32) NOT NULL DEFAULT '',
+	`name` VARCHAR(32) NOT NULL DEFAULT ''
+);
+DESC t7;
+-- 测试自增长的使用
+INSERT INTO t7 
+	VALUES (NULL, 'tom@qq.com', 'tom');
+INSERT INTO t7 (email, `name`) VALUES ('lzc@163.com', 'lzc');
+SELECT * FROM t7;
+
+-- 修改默认的自增长开始值
+CREATE TABLE t8 (
+	id INT PRIMARY KEY AUTO_INCREMENT,
+	email VARCHAR(32) NOT NULL DEFAULT '',
+	`name` VARCHAR(32) NOT NULL DEFAULT ''
+);
+ALTER TABLE t8 AUTO_INCREMENT = 100; -- 设置自增长的起始值
+INSERT INTO t8 VALUES (NULL, 'tom@qq.com', 'tom');
+# 如果指定自增长字段的值，则其值按照指定值来
+INSERT INTO t8 VALUES (12, 'kiki@qq.com', 'kiki'); -- 12
+-- 自增长从该列最大值开始
+INSERT INTO t8 VALUES (NULL, 'vivo@qq.com', 'vivo'); -- 101
+SELECT * FROM t8;
+```
+
+### 索引
+
+- 创建索引后，只会对创建索引列查询速度变快，通过其它列查询不会变化
+
+```mysql
+# 索引
+-- 创建测试数据库库 tmp
+CREATE DATABASE tmp;
+USE tmp;
+CREATE TABLE dept( /*部门表*/
+deptno MEDIUMINT   UNSIGNED  NOT NULL  DEFAULT 0,
+dname VARCHAR(20)  NOT NULL  DEFAULT "",
+loc VARCHAR(13) NOT NULL DEFAULT ""
+);
+
+#创建表EMP雇员
+CREATE TABLE emp
+(empno  MEDIUMINT UNSIGNED  NOT NULL  DEFAULT 0, /*编号*/
+ename VARCHAR(20) NOT NULL DEFAULT "", /*名字*/
+job VARCHAR(9) NOT NULL DEFAULT "",/*工作*/
+mgr MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,/*上级编号*/
+hiredate DATE NOT NULL,/*入职时间*/
+sal DECIMAL(7,2)  NOT NULL,/*薪水*/
+comm DECIMAL(7,2) NOT NULL,/*红利*/
+deptno MEDIUMINT UNSIGNED NOT NULL DEFAULT 0 /*部门编号*/
+) ;
+
+#工资级别表
+CREATE TABLE salgrade
+(
+grade MEDIUMINT UNSIGNED NOT NULL DEFAULT 0,
+losal DECIMAL(17,2)  NOT NULL,
+hisal DECIMAL(17,2)  NOT NULL
+);
+
+#测试数据
+INSERT INTO salgrade VALUES (1,700,1200);
+INSERT INTO salgrade VALUES (2,1201,1400);
+INSERT INTO salgrade VALUES (3,1401,2000);
+INSERT INTO salgrade VALUES (4,2001,3000);
+INSERT INTO salgrade VALUES (5,3001,9999);
+
+DELIMITER $$
+
+#创建一个函数，名字 rand_string，可以随机返回我指定的个数字符串
+CREATE FUNCTION rand_string(n INT)
+RETURNS VARCHAR(255) #该函数会返回一个字符串
+BEGIN
+#定义了一个变量 chars_str， 类型  varchar(100)
+#默认给 chars_str 初始值   'abcdefghijklmnopqrstuvwxyzABCDEFJHIJKLMNOPQRSTUVWXYZ'
+ DECLARE chars_str VARCHAR(100) DEFAULT
+   'abcdefghijklmnopqrstuvwxyzABCDEFJHIJKLMNOPQRSTUVWXYZ'; 
+ DECLARE return_str VARCHAR(255) DEFAULT '';
+ DECLARE i INT DEFAULT 0; 
+ WHILE i < n DO
+    # concat 函数 : 连接函数mysql函数
+   SET return_str =CONCAT(return_str,SUBSTRING(chars_str,FLOOR(1+RAND()*52),1));
+   SET i = i + 1;
+   END WHILE;
+  RETURN return_str;
+  END $$
+
+
+ #这里我们又自定了一个函数,返回一个随机的部门号
+CREATE FUNCTION rand_num( )
+RETURNS INT(5)
+BEGIN
+DECLARE i INT DEFAULT 0;
+SET i = FLOOR(10+RAND()*500);
+RETURN i;
+END $$
+
+ #创建一个存储过程， 可以添加雇员
+CREATE PROCEDURE insert_emp(IN START INT(10),IN max_num INT(10))
+BEGIN
+DECLARE i INT DEFAULT 0;
+# set autocommit =0 把autocommit设置成0
+ # autocommit = 0 含义: 不要自动提交
+ SET autocommit = 0; #默认不提交sql语句
+ REPEAT
+ SET i = i + 1;
+ #通过前面写的函数随机产生字符串和部门编号，然后加入到emp表
+ INSERT INTO emp VALUES ((START+i) ,rand_string(6),'SALESMAN',0001,CURDATE(),2000,400,rand_num());
+  UNTIL i = max_num
+ END REPEAT;
+ # commit整体提交所有sql语句，提高效率
+   COMMIT;
+ END $$
+
+ #添加8000000数据
+CALL insert_emp(100001,8000000)$$
+
+#命令结束符，再重新设置为;
+DELIMITER ;
+
+SELECT COUNT(*) FROM emp; -- 8000000行
+-- 没有创建索引前，查询速度
+SELECT * FROM emp WHERE empno = 123456; -- 3.17s
+-- 在没有创建索引前，emp.ibd大小为524,288KB
+-- 创建索引后，大小为655.360KB
+/*
+empno_index 索引名称
+on emp (empno) 表示在emp表的empno列创建索引
+*/
+CREATE INDEX empno_index ON emp(empno);
+-- 创建索引后，查询速度
+SELECT * FROM emp WHERE empno = 123457; -- 0s
+
+# 创建索引后，只对创建了索引的列有效
+SELECT * FROM emp WHERE ename = 'ZFdBwF'; -- 3.25s
+```
+
+- 索引的原理
+    - ![img_54.png](MySQL/imgs/img_54.png)
+    - 当没有索引，会进行**全表扫描**，查询速度慢
+    - 当创建索引后，会对索引列**创建二叉树索引**，查询变快
+- 索引的代价
+    1. 磁盘占用
+    2. 对表进行 `dml(update, delete, insert)` 操作，会对索引进行维护，影响到dml效率
+
+- 索引类型
+    1. 主键索引，主键自动的为主索引(类型 primary key)
+    2. 唯一索引(unique)
+    3. 普通索引(index)
+    4. 全文索引(FULLTEXT)，适用于MyISAM。一般开发中不适用mysql自带的全文索引，而是使用：全文搜索 `Solr` 和 `ElasticSearch(ES)`
+
+```mysql
+create table t1 (
+    id int primary key, -- 主键，同时也是索引，称为主键索引
+    name varchar(32),
+    email varchar(32) unique -- email是唯一的，同时也是索引，称为unique索引
+);
+```
+
+- 小结：哪些列上适合使用索引
+1. 较频繁的作为查询条件的字段应该创建索引
+2. 唯一性太差的字段不适合单独创建索引，即使频繁作为查询的条件
+3. 更新非常频繁的字段不适合创建索引
+4. 不会出现在 `where` 子句中字段不该创建索引
+
+```mysql
+# 演示mysql的索引使用
+USE db01;
+CREATE TABLE t9 (
+	id INT,
+	`name` VARCHAR(32)
+);
+-- 查询表是否有索引
+SHOW INDEXES FROM t9;
+-- 添加索引
+-- 添加唯一索引
+CREATE UNIQUE INDEX id_index ON t9(id);
+-- 添加普通索引1
+CREATE INDEX id_index ON t9(id);
+/* 如何选择
+- 如果某列的值是不会重复的，则优先考虑使用unique索引，否则使用普通索引
+*/
+-- 添加普通索引方式2
+ALTER TABLE t9 ADD INDEX id_index (id);
+
+-- 添加主键索引
+-- 1. 创建表时指定 primary key
+-- 2. 创建表后指定
+ALTER TABLE t9 ADD PRIMARY KEY (id);
+
+-- 删除索引
+DROP INDEX id_index ON t9;
+
+-- 删除主键索引
+ALTER TABLE t9 DROP PRIMARY KEY;
+
+-- 修改索引，先删除，再添加新的索引
+
+-- 查询索引
+-- 1. 方式1
+SHOW INDEX FROM t9;
+-- 2. 方式2
+SHOW INDEXES FROM t9;
+-- 3. 方式3
+SHOW KEYS FROM t9;
+-- 4. 方式4
+DESC t9;
+
+
+# 练习
+-- 方式1
+CREATE TABLE t10 (
+	id INT PRIMARY KEY,
+	goods_name VARCHAR(32),
+	customer VARCHAR(32)
+);
+-- 方式2
+CREATE TABLE t11 (
+	id INT,
+	goods_name VARCHAR(32),
+	customer VARCHAR(32)
+);
+ALTER TABLE t11 ADD PRIMARY KEY (id);
+```
+
+### 事务
+
+#### 事务操作
+
+- 事务：用于保证数据的一致性，它由**一组相关的dml语句组成**，该组dml语句要么全部成功。要么全部失败。
+  如：转账就要用事务来处理，用以保证数据的一致性。
+- 当执行事务操作时(dml语句)，mysql会在表上**加锁**，防止其它用户改表的数据，这对用户来说非常重要。
+- ![事务](MySQL/imgs/img_55.png)
+- ![事务操作示意图](MySQL/imgs/img_56.png)
+- ![img_57.png](MySQL/imgs/img_57.png)
+
+```mysql
+# 事务的一个重要概念和具体操作
+DROP TABLE t10;
+-- 1. 创建一张测试表
+CREATE TABLE t10 (
+	id INT,
+	`name` VARCHAR(32)
+);
+-- 2. 开始事务
+START TRANSACTION;
+-- 3. 设置保存点
+SAVEPOINT a;
+-- 指定dml操作
+INSERT INTO t10 VALUES (1, 'tom');
+SAVEPOINT b;
+-- 执行dml操作
+INSERT INTO t10 VALUES (2, 'charlie');
+
+-- 回退到b
+ROLLBACK TO b;
+-- 回退到a
+ROLLBACK TO a;
+# 查询
+SELECT * FROM t10;
+-- 如果这样写，表示直接回退到事务开始的状态
+ROLLBACK;
+```
+
+- 事务的使用细节
+
+```mysql
+# 事务使用细节
+-- 1. 如果不开启事务，默认情况下，dml操作时自动提交的，不能回滚
+INSERT INTO t10 VALUES (1, 'charlie');
+SELECT * FROM t10;
+-- 2. 如果开启一个事务，没有创建保存点，可以执行rollback
+-- 默认就是回退到事务开始的状态
+START TRANSACTION;
+INSERT INTO t10 VALUES (2, 'tom');
+INSERT INTO t10 VALUES (3, 'hsp');
+ROLLBACK; -- 表示直接回退到事务开始的状态
+-- 3. 可以在事务还没提交时，创建多个保存点
+-- 4. 可以在事务没有提交前，选择回退到那个保存点
+-- 5. mysql需要使用InnoDB引擎才能使用事务，MyISAM不支持
+-- 6. 开始一个事务 start transaction; set autocommit=off;
+-- set autocommit=off;
+```
+
+#### 隔离级别
+
+- 事务的隔离级别
+1. 多个连接开启各自事务操作数据库中数据时，数据库系统要负责隔离操作，以保证各个连接在获取数据时的准确性。
+2. **脏读**(dirty read):**当一个事务读取另一个事务尚未提交的修改时**，产生脏读
+3. **不可重复读**(non-repeatable read):同一查询在同一事务中多次进行，由于其它提交事务所做的**修改或删除**，每次返回不同的结果集，
+   此时发生不可重复读。
+4. **幻读**(phantom read):同一查询在同一事务中多次进行，由于其它提交事务所做的**插入操作**，每次返回不同的结果集，称为幻读
+
+- 事务隔离级别：Mysql隔离级别定义了事务与事务之间的隔离成都
+- ![Mysql隔离级别](MySQL/imgs/img_58.png)
+- ![img_59.png](MySQL/imgs/img_59.png)
+
+- 事务的(acid)特性
+- ![img_60.png](MySQL/imgs/img_60.png)
+
+#### 存储引擎
+
+- ![img_61.png](MySQL/imgs/img_61.png)
+- `show engines;`
+    - ![img_62.png](MySQL/imgs/img_62.png)
+- ![img_63.png](MySQL/imgs/img_63.png)
+- ![img_64.png](MySQL/imgs/img_64.png)
+- ![img_65.png](MySQL/imgs/img_65.png)
+
+```mysql
+# 表类型和存储引擎
+-- 查看所有的存储引擎
+SHOW ENGINES;
+-- innodb存储引擎
+-- 1.支持事务 2.支持外键 3.支持行级锁
+
+-- myisam存储引擎
+CREATE TABLE t13 (
+	id INT,
+	`name` VARCHAR(32)
+) ENGINE MYISAM;
+-- 1. 添加速度块2.不支持事务和外键3.支持表级锁
+START TRANSACTION;
+SAVEPOINT t1;
+INSERT INTO t13 VALUES (1, 'hsp');
+SELECT * FROM t13;
+ROLLBACK TO t1; -- 警告，不支持事务
+
+-- memory 存储引擎
+-- 1. 数据存储在内存中 2. 执行速度块(没有IO读写) 3.默认支持索引(hash表)
+CREATE TABLE t14 (
+	id INT,
+	`name` VARCHAR(32)
+) ENGINE MEMORY;
+INSERT INTO t14 VALUES (1, 'tom'), (2, 'jack'), (3, 'charlie');
+SELECT * FROM t14;
+```
+
+### 视图
+
+- 试图(view)
+    1. 视图是一个虚拟表，其内容由查询定义。同真实的表一样，视图包含列，其数据来自对应的真实表(基表)
+    2. 通过视图可以修改基表的数据，同样，基表的变化也会影响视图的数据
+- ![视图](MySQL/imgs/img_66.png)
+- ![视图的基本使用](MySQL/imgs/img_67.png)
+-
+
+
+```mysql
+# 视图的使用
+-- 创建一个视图 emp_view01
+CREATE VIEW emp_view01 AS 
+	SELECT empno, ename, job, deptno FROM emp;
+-- 查看视图
+DESC emp_view01;
+SELECT * FROM emp_view01;
+-- 修改视图
+-- alter view emp_view01 as select ...; -- 更新成新的视图
+-- 查看创建视图的指令
+SHOW CREATE VIEW emp_view01;
+-- 删除视图
+DROP VIEW emp_view01;
+
+# 视图的细节讨论
+-- 1. 创建视图后，到数据库查看，对应视图只有一个视图结构文件(形式：视图名.frm)
+-- 2. 视图的数据变化会影响到基表，同时基表数据的变化也会影响到视图
+UPDATE emp_view01 SET job = 'MANAGER' WHERE empno = 7369;
+SELECT * FROM emp WHERE empno = 7369;
+UPDATE emp SET job = 'SALESMAN' WHERE empno = 7369;
+SELECT * FROM emp_view01 WHERE empno = 7369;
+-- 3. 视图中可以再使用视图，比如从 emp_view01 视图中，选出 empno 和 ename 做出新视图
+CREATE VIEW emp_view02 AS SELECT empno, ename FROM emp_view01;
+SELECT * FROM emp_view02;
+```
+
+- 视图最佳实践
+    - ![img_68.png](MySQL/imgs/img_68.png)
+
+```mysql
+# 视图练习
+-- 针对emp,dept和salgrade三张表，创建一个视图 emp_view03
+-- 可以显示雇员编号，雇员名，雇员部门名称和薪水级别
+SELECT DISTINCT empno, ename, dname, grade FROM emp, dept, salgrade
+	WHERE emp.deptno = dept.deptno AND (sal BETWEEN losal AND hisal);
+-- 将得到的表，构建成视图
+CREATE VIEW my_emp03 AS
+	SELECT DISTINCT empno, ename, dname, grade FROM emp, dept, salgrade
+	WHERE emp.deptno = dept.deptno AND (sal BETWEEN losal AND hisal);
+SELECT * FROM my_emp03;
+```
+
+### Mysql管理
+
+Mysql中的用户，都存储再系统数据库 `mysql` 中的 `user` 表中
+- ![img_69.png](MySQL/imgs/img_69.png)
+- ![img_70.png](MySQL/imgs/img_70.png)
+
+```mysql
+# mysql用户管理
+--  当做项目开发时，可以根据不同的开发人员，赋给他相应的Mysql操作权限
+-- 所以，mysql数据库管理人员(root)，根据需求创建不同的用户，设置相应的权限
+-- 1. 创建新用户
+/*
+1. 'charlie@localhost' 表示用户的完整信息 charlie用户名 localhost登录的IP
+2. 123456密码，存放再mysql.user表的是经过 password('123456')加密后的
+*/
+CREATE USER 'charlie'@'localhost' IDENTIFIED BY '123456';
+SELECT * FROM mysql.user;
+DELETE FROM mysql.user WHERE `user` = 'charlie';
+
+SELECT `host`, `user`, `authentication_string` FROM mysql.user;
+-- 2. 删除用户
+DROP USER 'charlie'@'localhost';
+-- 1. 登录用户，
+/*
+不同的数据库用户，操作的库和表不相同
+不同的数据库用户，登录到DBMS后，根据相应的权限，可以操作的数据库和数据对象(表，视图，触发器)不一样
+*/
+
+-- 4. 修改密码
+SET PASSWORD = PASSWORD('abcdef');
+-- 修改其他人的密码，需要权限
+SET PASSWORD FOR 'root'@'localhost' = PASSWORD('123456');
+```
+
+Mysql权限管理
+- `grant 权限列表 on 库.对象名 to '用户名'@'登录位置' [identified by '密码']`
+- ![img_71.png](MySQL/imgs/img_71.png)
+- ![img_72.png](MySQL/imgs/img_72.png)
+
+```mysql
+# 用户权限管理
+CREATE USER 'hsp'@'localhost' IDENTIFIED BY '123';
+-- 使用root用户创建testdb，表news
+CREATE DATABASE IF NOT EXISTS testdb;
+CREATE TABLE news (
+	id INT,
+	content VARCHAR(32)
+);
+-- 添加一条测试数据
+INSERT INTO news VALUES (100, '联合早报');
+SELECT * FROM news;
+-- 给hsp用户 分配查看 news 表和 添加news的权限
+GRANT SELECT, INSERT ON testdb.news TO 'hsp'@'localhost';
+-- 修改hsp密码
+SET PASSWORD FOR 'hsp'@'localhost' = '123456';
+-- 回收hsp用户在testdb.news表的所有权限
+REVOKE SELECT, UPDATE, INSERT ON testdb.news FROM 'hsp'@'localhost';
+
+-- 删除用户hsp
+DROP USER 'hsp'@'localhost';
+SELECT * FROM mysql.user;
+```
+
+- mysql用户管理细节
+    - ![img_73.png](MySQL/imgs/img_73.png)
+
+```mysql
+# 用户管理细节
+-- 不指定登录IP，则为%，表示所有IP都有连接权限
+CREATE USER 'hsp';
+SELECT `host`, `user` FROM mysql.user;
+-- 指定IP字段
+-- '192.168.1.%'表示xxx与在192.168.1.*的ip都可以登录
+CREATE USER 'jack'@'192.168.1.%';
+-- 在删除用户时，如果host不是%，需要明确指定 '用户名'@'host值'
+DROP USER hsp; -- 默认就是 drop user 'hsp'@'%'
+DROP USER 'charlie'@'localhost';
+```
+[Mysql练习](MySQL/sql/mysql_homework.sql)
+
+## JDBC
+
+### JDBC概述
+
+1. JDBC为访问不同的数据库提供了统一的接口，为使用者屏蔽了细节问题
+2. Java程序员使用JDBC，可以连接任何提供了JDBC驱动程序的数据库系统，从而完成对数据库的各种操作
+3. JDBC的基本原理
+    - ![img.png](JDBC/imgs/img.png)
+4. JDBC带来的好处
+    - ![img_1.png](JDBC/imgs/img_1.png)
+5. JDBC是Java提供一套用于数据库操作的接口API，**Java程序员只需要面向这套接口编程即可**。
+   不同的数据库厂商，需针对这套接口，提供不同的实现。
+
+**JDBC程序编写步骤**
+1. 注册驱动-加载Driver类
+2. 获取连接-得到Connection
+3. 执行增删改查-发送SQL给mysql执行
+4. 释放资源-关闭相关连接
+5. ![img_2.png](JDBC/imgs/img_2.png)
+
+```java
+package com.charlie.jdbc;
+
+import com.mysql.jdbc.Driver;
+
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.Properties;
+
+/**
+ * 第一个jdbc程序，完成简单的操作
+ */
+public class Jdbc01 {
+    public static void main(String[] args) throws SQLException {
+        /*
+        前置工作：在项目下创建一个文件夹比如 libs
+        将 mysql.jar 拷贝到该目录下，点击 add to project 加入到项目中
+         */
+
+        // 1. 注册驱动
+        Driver driver = new Driver();   // 创建driver对象
+
+        // 2. 得到连接
+        /*
+        1) jdbc:mysql:// 规定好的表示协议，通过jdbc方式连接mysql
+        2) localhost 主机，可以是IP地址
+        3) 3306 表示mysql监听的接口
+        4) /hsp_db02 表示连接到 mysql dbms 的哪个数据库
+        5) mysql的连接本质上就是 socket 连接
+         */
+        String url = "jdbc:mysql://localhost:3306/hsp_db02";
+       // 将用户名和密码放入到 Properties 对象
+        Properties properties = new Properties();
+        // 说明：user和password是规定号的，后面的值根据实际情况写
+        properties.setProperty("user", "root"); // 用户
+        properties.setProperty("password", "011121"); // 密码
+
+        Connection connect = driver.connect(url, properties);
+
+        // 3. 执行sql
+//        String sql = "insert into actor values(null, '刘德华', '男', '1970-11-11', '135')";
+//        String sql = "update actor set `name` = '周星驰' where id = 1";
+        String sql = "delete from actor where id = 1";
+
+        // statement 用于执行静态SQL语句并返回生成结果的对象
+        Statement statement = connect.createStatement();
+        int rows = statement.executeUpdate(sql);    // 如果是dml语句，返回的就是影响的行数
+
+        System.out.println(rows > 0 ? "成功" : "失败");
+
+        // 4. 关闭连接资源
+        statement.close();
+        connect.close();
+    }
+}
+```
+
+### 获取数据库连接的5种方式
+
+> 提示：
+> 1. mysql驱动5.1.6可以无需 `Class.forName("com.mysql.jdbc.Driver");`
+> 2. 从jdk1.5以后使用jdbc4，不需要再显式调用 `Class.forName()` 注册驱动而是自动调用驱动
+     >     jar包下 `META-INF\services\java.sql.Driver` 文本种的类名称去注册
+> 3. 建议写上 `Class.forName()` 更加明确
+
+- ![img_3.png](JDBC/imgs/img_3.png)
+
+```java
+package com.charlie.jdbc;
+
+import com.mysql.jdbc.Driver;
+import org.junit.Test;
+
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.Properties;
+
+/**
+ * Java连接mysql的5种方式
+ */
+public class JdbcConn {
+
+    public static void main(String[] args) throws Exception {
+        // 使用方式5完成练习
+        Properties properties = new Properties();
+        String fileName = "src\\mysql.properties";
+        properties.load(new FileInputStream(fileName));
+        String url = properties.getProperty("url");
+        String user = properties.getProperty("user");
+        String password = properties.getProperty("password");
+        String driver = properties.getProperty("driver");
+
+        Class.forName(driver);
+        Connection connection = DriverManager.getConnection(url, user, password);
+        Statement statement = connection.createStatement();
+        String sql1 = "create table news " +
+                "(id int primary key auto_increment," +
+                "`name` varchar(32) not null default ''," +
+                "content text not null);";
+        int row1 = statement.executeUpdate(sql1);
+        System.out.println(row1 > 0 ? "创建成功" : "创建失败");
+
+        String sql2 = "insert into news values" +
+                "(null, '北京日报', '建设美丽中国')," +
+                "(null, '今晚报', '自由民主')," +
+                "(null, '联合早报', '花园城市')," +
+                "(null, '南方周末', '民以食为天')," +
+                "(null, '新京报', '跨年');";
+        int row2 = statement.executeUpdate(sql2);
+        System.out.println(row2 > 0 ? "添加成功" : "添加失败");
+
+        String sql3 = "update news set content = 'hello, world' where id = 1;";
+        int row3 = statement.executeUpdate(sql3);
+        System.out.println(row3 > 0 ? "修改成功" : "修改失败");
+
+        String sql4 = "delete from news where id = 3;";
+        int row4 = statement.executeUpdate(sql4);
+        System.out.println(row4 > 0 ? "删除成功" : "删除失败");
+
+        // 关闭连接资源
+        statement.close();
+        connection.close();
+    }
+
+    @Test
+    public void connect01() throws SQLException {
+        Driver driver = new Driver();   // 创建 driver 对象
+        String url = "jdbc:mysql://localhost:3306/hsp_db02";
+        Properties properties = new Properties();
+        properties.setProperty("user", "root");
+        properties.setProperty("password", "011121");
+        Connection connect = driver.connect(url, properties);
+        System.out.println("方式1：" + connect);
+    }
+
+    @Test
+    public void connect02() throws ClassNotFoundException, InstantiationException, IllegalAccessException, SQLException {
+        // 使用反射加载Driver类，动态加载，更加灵活，减少依赖性
+        Class<?> aClass = Class.forName("com.mysql.jdbc.Driver");
+        Driver driver = (Driver) aClass.newInstance();
+
+        String url = "jdbc:mysql://localhost:3306/hsp_db02";
+        Properties properties = new Properties();
+        properties.setProperty("user", "root");
+        properties.setProperty("password", "011121");
+        Connection connect = driver.connect(url, properties);
+        System.out.println("方式2：" + connect);
+    }
+
+    @Test
+    public void connect03() throws Exception {
+        // 使用 DriverManager 替代 Driver 进行统一管理
+        Class<?> aClass = Class.forName("com.mysql.jdbc.Driver");
+        Driver driver = (Driver) aClass.newInstance();
+
+        // 创建 url user 和 password
+        String url = "jdbc:mysql://localhost:3306/hsp_db02";
+        String user = "root";
+        String password = "011121";
+
+        DriverManager.registerDriver(driver); // 注册
+        Connection connection = DriverManager.getConnection(url, user, password);
+        System.out.println("方式3：" + connection);
+    }
+
+    @Test /* 推荐使用 */
+    public void connect04() throws Exception {
+        // 方式4：使用 Class.forName 自动完成注册驱动，简化代码
+        // 在加载Driver类是，完成注册
+        /*
+        1. 静态代码块，在类加载时，会执行一次
+        2. DriverManager.registerDriver(new Driver());
+        3. 因此注册driver的工作已经完成
+            static {
+                try {
+                    DriverManager.registerDriver(new Driver());
+                } catch (SQLException var1) {
+                    throw new RuntimeException("Can't register driver!");
+                }
+            }
+         */
+        Class.forName("com.mysql.jdbc.Driver");
+        String url = "jdbc:mysql://localhost:3306/hsp_db02";
+        String user = "root";
+        String password = "011121";
+        Connection connection = DriverManager.getConnection(url, user, password);
+        System.out.println("方式4：" + connection);
+    }
+
+    // 方式5：在方式4的基础商改进，增加配置文件，让连接mysql更加灵活
+    @Test
+    public void connect05() throws IOException, ClassNotFoundException, SQLException {
+        // 通过 Properties对象 获取配置文件的信息
+        Properties properties = new Properties();
+        properties.load(new FileInputStream("src\\mysql.properties"));
+        String user = properties.getProperty("user");
+        String password = properties.getProperty("password");
+        String driver = properties.getProperty("driver");
+        String url = properties.getProperty("url");
+
+        Class.forName(driver);  // 建议写上
+
+        Connection connection = DriverManager.getConnection(url, user, password);
+        System.out.println("方式5：" + connection);
+    }
+}
+```
+
+### ResultSet结果集
+
+1. `ResultSet`表示数据库结果集的数据表，通常通过执行擦汗寻数据库的语句生成
+2. `ResultSet`对象保持一个光标指向其当前的数据行。最初，光标位于第一行之前
+3. `next`方法将光标移动到下一行，并且由于在 `ResultSet` 对象种没有更多行时返回 `false`
+   因此可以在 while循环种使用循环来遍历结果集
+- ![img_4.png](JDBC/imgs/img_4.png)
+
+```java
+package com.charlie.jdbc.resultset_;
+
+import java.io.FileInputStream;
+import java.sql.*;
+import java.util.Properties;
+
+/**
+ * 演示一个查询语句返回 ResultSet
+ */
+public class ResultSet_ {
+    public static void main(String[] args) throws Exception {
+        String mysqlFile = "src\\mysql.properties";
+        Properties properties = new Properties();
+        properties.load(new FileInputStream(mysqlFile));
+        // 获取相关值
+        String url = properties.getProperty("url");
+        String user = properties.getProperty("user");
+        String password = properties.getProperty("password");
+        String driver = properties.getProperty("driver");
+        // 1. 注册驱动
+        Class.forName(driver);
+        // 2. 得到连接
+        Connection connection = DriverManager.getConnection(url, user, password);
+        // 3. 得到statement
+        Statement statement = connection.createStatement();
+        // 4. sql语句
+        String sql = "select id, name, gender, borndate from actor";
+        // 执行给定的SQL语句，返回单个 ResultSet 对象
+        ResultSet resultSet = statement.executeQuery(sql);
+        /*
+        +----+-----------+--------+---------------------+-------+
+        | id | name      | gender | borndate            | phone |
+        +----+-----------+--------+---------------------+-------+
+        |  2 | 李自成    | 男     | 1997-12-20 00:00:00 | 136   |
+        |  3 | 高育良    | 男     | 1950-08-07 00:00:00 | 166   |
+        +----+-----------+--------+---------------------+-------+
+         */
+
+        // 5. 使用while取出数据
+        while (resultSet.next()) {  // 让光标向后移动，如果没有更多行，则返回false
+            int id = resultSet.getInt(1);    // 获取该行的第1列数据
+            String name = resultSet.getString(2); // 第2列
+            String gender = resultSet.getString(3);
+            Date date = resultSet.getDate(4);
+            System.out.println(id + "\t" + name + "\t" + gender + "\t" + date);
+        }
+
+        // 6. 关闭连接
+        statement.close();
+        connection.close();
+    }
+}
+```
+
+### Statement
+
+1. `Statement`对象，用于执行静态SQL的语句并返回其生成的结果的对象
+2. 在连接建立后，需要对书库进行访问，执行命令或是SQL语句，可以通过
+    - Statement-存在SQL注入
+    - PreparedStatement-预处理
+    - CallableStatement-存储过程
+3. `Statement`对象执行SQL语句，存在**SQL注入**风险
+4. SQL注入是利用某些系统没有对用户输入的数据进行充分的检查，而在用户输入数据中注入非法SQL语句段或命令
+   恶意国际数据库
+5. 要防范SQL注入，只要用 `PreparedStatement` 取代 Statement 即可
+
+```java
+package com.charlie.jdbc.statement_;
+
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.sql.*;
+import java.util.Properties;
+import java.util.Scanner;
+
+/**
+ * 演示SQL注入问题
+ */
+public class Statement_ {
+    public static void main(String[] args) throws IOException, ClassNotFoundException, SQLException {
+        Scanner scanner = new Scanner(System.in);
+        // 让用户输入管理员名和密码
+        System.out.print("请输入管理员的名字："); // next() 当接受到 空格 或者 单引号 时表示结束
+        String admin_name = scanner.nextLine(); // 如果希望看到SQL注入，需要用 nextLine()
+        System.out.print("请输入管理员的密码：");
+        String admin_pwd = scanner.nextLine();
+
+        String mysqlFile = "src\\mysql.properties";
+        Properties properties = new Properties();
+        properties.load(new FileInputStream(mysqlFile));
+        // 获取相关值
+        String url = properties.getProperty("url");
+        String user = properties.getProperty("user");
+        String password = properties.getProperty("password");
+        String driver = properties.getProperty("driver");
+        // 1. 注册驱动
+        Class.forName(driver);
+        // 2. 得到连接
+        Connection connection = DriverManager.getConnection(url, user, password);
+        // 3. 得到statement
+        Statement statement = connection.createStatement();
+        // 4. sql语句
+//        String sql = "select name, pwd from admin";
+        String sql = "select name, pwd from admin where name = '"
+                + admin_name + "' and pwd = '" + admin_pwd + "';";
+        ResultSet resultSet = statement.executeQuery(sql);
+
+        if (resultSet.next()) { // 如果查询到一条记录，则说明该管理存在
+            System.out.println("登录成功！");
+        } else {
+            System.out.println("登录失败~");
+        }
+
+        // 6. 关闭连接
+        statement.close();
+        connection.close();
+    }
+}
+```
+
+### PreparedStatement
+
+1. `PreparedStatement`执行的SQL语句中的参数用问号`?`表示，调用`PreparedStatement`对象的`setXXX()`方法来设置这些参数
+   `setXXX()`方法有两个参数，第一个参数是要设置的SQL语句中的参数的索引(从1开始)，第二个是设置的SQL语句中的参数的值
+2. 调用 `executeQuery()` 返回 `ResultSet` 对象
+3. 调用 `executeUpdate()` 执行更新，包括增、删、修改
+4. ![预处理优点](JDBC/imgs/img_5.png)
+
+```java
+package com.charlie.jdbc;
+
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.sql.*;
+import java.util.Properties;
+import java.util.Scanner;
+
+public class PreparedStatementExercise {
+    public static void main(String[] args) throws IOException, ClassNotFoundException, SQLException {
+        // 注册驱动
+        String mysqlPath = "src\\mysql.properties";
+        Properties properties = new Properties();
+        properties.load(new FileInputStream(mysqlPath));
+        String url = properties.getProperty("url");
+        String user = properties.getProperty("user");
+        String password = properties.getProperty("password");
+        String driver = properties.getProperty("driver");
+
+        // 建立连接
+        Class.forName(driver);
+        Connection connection = DriverManager.getConnection(url, user, password);
+
+        // sql：创建admin表
+        String sql1 = "create table admin (" +
+                "id int primary key auto_increment," +
+                "name varchar(32) not null default ''," +
+                "pwd varchar(32) not null default ''" +
+                ");";
+        PreparedStatement preparedStatement = connection.prepareStatement(sql1);
+        int rows1 = preparedStatement.executeUpdate();
+        preparedStatement.close();
+        System.out.println(rows1 > 0 ? "创表成功！" : "创表失败~");
+
+        // sql：添加数据
+//        String sql2 = "insert into admin values" +
+//                "(null, 'jack', '123')," +
+//                "(null, 'tom', '666')," +
+//                "(null, 'hsp', 'hsp')," +
+//                "(null, 'lzc', '111')," +
+//                "(null, 'charlie', '777');";
+        Scanner scanner = new Scanner(System.in);
+        String adminName = "";
+        String adminPwd = "";
+        String sql2 = "insert into admin values" +
+                "(null, ?, ?);";
+        PreparedStatement preparedStatement1 = connection.prepareStatement(sql2);
+        for (int i = 0; i < 5; i++) {
+            System.out.print("请输入管理员姓名：");
+            adminName = scanner.nextLine();
+            System.out.print("请输入管理员密码：");
+            adminPwd = scanner.nextLine();
+            preparedStatement1.setString(1, adminName);
+            preparedStatement1.setString(2, adminPwd);
+            int j = preparedStatement1.executeUpdate();
+            System.out.println(j > 0 ? "添加成功！" : "添加失败~");
+        }
+        preparedStatement1.close();
+
+        // sql：修改记录
+        String sql3 = "update admin set name = 'king' where name = 'tom'";
+        PreparedStatement preparedStatement2 = connection.prepareStatement(sql3);
+        int rows2 = preparedStatement2.executeUpdate();
+        System.out.println(rows2 > 0 ? "修改成功！" : "修改失败~");
+
+        // sql：删除记录
+        String sql4 = "delete from admin where name = ?";
+        PreparedStatement preparedStatement3 = connection.prepareStatement(sql4);
+        System.out.print("请输入要删除的管理员姓名：");
+        adminName = scanner.nextLine();
+        preparedStatement3.setString(1, adminName);
+        int rows3 = preparedStatement3.executeUpdate();
+        preparedStatement3.close();
+        System.out.println(rows3 > 0 ? "删除成功！" : "删除失败~");
+
+        // sql：查询全部记录，并显示在控制台
+        String sql = "select * from admin";
+        PreparedStatement preparedStatement4 = connection.prepareStatement(sql);
+        ResultSet resultSet = preparedStatement4.executeQuery(sql);
+        while (resultSet.next()) {
+            int id = resultSet.getInt(1);
+            String name = resultSet.getString(2);
+            String pwd = resultSet.getString(3);
+            System.out.println(id + "\t" + name + "\t" + pwd);
+        }
+
+        // 关闭连接
+        preparedStatement4.close();
+        connection.close();
+    }
+}
+```
+
+### JDBC相关API小结
+
+- **JDBC API**
+    - `DriverManager`驱动管理类
+        - `getConnection(url, user, pwd)`获取到连接
+    - `Connection`接口
+        - `createStatement`创建`Statement`对象
+        - `preparedStatement(sql)`生成预处理对象
+    - `Statement`接口
+        - `executeUpdate(sql)`执行dml语句，返回影响的行数
+        - `executeQuery(sql)`执行查询，返回`ResultSet`对象
+        - `execute(sql)`执行任意的sql语句，返回布尔值
+    - `PreparedStatement`接口
+        - `executeUpdate(sql)`执行dml语句
+        - `executeQuery(sql)`执行查询，返回`ResultSet`对象
+        - `execute(sql)`执行任意的sql语句，返回布尔值
+        - `setXXX(占位符索引, 占位符的值)` 解决SQL注入问题
+        - `setObject(占位符索引, 占位符的值)`
+    - `ResultSet`结果集
+        - `next()`向下移动一行，如果没有下一行，返回`false`
+        - `previous()`向上移动，如果没有上一行，返回`false`
+        - `getXXX(列索引/列名)`，返回对应列的值，返回类型是XXX
+        - `getObject(列索引/列名)`返回对应列的自豪，接收类型为`Object`
+
+### 封装JDBCUtils
+
+- [JDBCUtils](JDBC/src/com/charlie/jdbc/utils/JDBCUtils.java)
+- [测试工具类](JDBC/src/com/charlie/jdbc/utils/JDBCUtils_Use.java)
+
+```java
+package com.charlie.jdbc.utils;
+
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.sql.*;
+import java.util.Properties;
+
+/**
+ * 工具类，完成 mysql 的连接和关闭资源
+ */
+public class JDBCUtils {
+    // 定义相关的属性(4个)，因为只需要一份，所以做成static
+    private static final String user;
+    private static final String password;
+    private static final String url;
+    private static final String driver;
+
+    // 在static代码块中初始化
+    static {
+        try {
+            Properties properties = new Properties();
+            properties.load(new FileInputStream("src\\mysql.properties"));
+            // 读取相关的属性值
+            user = properties.getProperty("user");
+            password = properties.getProperty("password");
+            url = properties.getProperty("url");
+            driver = properties.getProperty("driver");
+        } catch (IOException e) {
+            // 在实际开发中，可以这样梳理
+            // 1. 将编译异常转成运行异常
+            // 2. 这时调用者可以选择捕获该异常，也可以选择默认处理该异常，比较方便
+            throw new RuntimeException(e);
+        }
+    }
+
+    // 连接数据库，返回Connection
+    public static Connection getConnection() {
+        try {
+            return DriverManager.getConnection(url, user, password);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    // 关闭资源
+    /*
+    1. ResultSet 结果集
+    2. Statement 或者 PreparedStatement
+    3. Connection
+    4. 如果需要关闭资源，就传入对象，否则传入null
+     */
+    public static void close(ResultSet set, Statement statement, Connection connection) {
+        // 判断是否为null
+        try {
+            if (set != null) {
+                set.close();
+            }
+            if (statement != null) {
+                statement.close();
+            }
+            if (connection != null) {
+                connection.close();
+            }
+        } catch (SQLException e) {
+            // 将编译异常转成运行异常
+            throw new RuntimeException(e);
+        }
+    }
+}
+```
+
+```java
+package com.charlie.jdbc.utils;
+
+import org.junit.Test;
+
+import java.sql.*;
+
+/**
+ * 演示如何使用 JDBCUtils 工具类，完成dml和select
+ */
+public class JDBCUtils_Use {
+    public static void main(String[] args) {
+
+    }
+
+    @Test
+    public void testDML() { // insert, update, delete
+        // 1. 得到连接
+        Connection connection = null;
+        // 2. 编写sql
+        String sql = "update actor set name = ? where id = ?;";
+//        String sql = "insert into actor values (null, ?, null, null, ?)";
+        // 3. 创建 PreparedStatement 对象
+        PreparedStatement preparedStatement = null;
+        try {
+            connection = JDBCUtils.getConnection();
+            preparedStatement = connection.prepareStatement(sql);
+            // 给占位符赋值
+            preparedStatement.setString(1, "李达康");
+            preparedStatement.setInt(2, 2);
+            // 执行
+            preparedStatement.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        } finally {
+            // 关闭资源
+            JDBCUtils.close(null, preparedStatement, connection);
+        }
+    }
+
+    @Test
+    public void testSelect() {
+        Connection connection = null;
+        PreparedStatement preparedStatement = null;
+        ResultSet set = null;
+        try {
+            connection = JDBCUtils.getConnection();
+            String sql = "select * from actor;";
+            preparedStatement = connection.prepareStatement(sql);
+            set = preparedStatement.executeQuery();
+            while (set.next()) {
+                int id = set.getInt("id");
+                String name = set.getString("name");
+                String gender = set.getString("gender");
+                Date date = set.getDate("borndate");
+                String phone = set.getString("phone");
+                System.out.println(id + "\t" + name + "\t" + gender + "\t" + date + "\t" + phone);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        } finally {
+            // 关闭资源
+            JDBCUtils.close(set, preparedStatement, connection);
+        }
+    }
+}
+```
+
+### 事务
+
+- ![img_6.png](JDBC/imgs/img_6.png)
+
+```java
+package com.charlie.jdbc.transaction_;
+
+import com.charlie.jdbc.utils.JDBCUtils;
+import org.junit.Test;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+
+/**
+ * 演示在JDBC中如何使用事务
+ */
+public class Transaction_ {
+
+    @Test
+    public void noTransaction() {
+        // 1. 得到连接
+        Connection connection = null;
+        // 2. 编写sql
+        String sql1 = "update account set balance = balance - 100 where id = 1;";
+        String sql2 = "update account set balance = balance + 100 where id = 2;";
+        // 3. 创建 PreparedStatement 对象
+        PreparedStatement preparedStatement = null;
+        try {
+            connection = JDBCUtils.getConnection(); // connection在默认情况下是自动提交的
+            preparedStatement = connection.prepareStatement(sql1);
+            preparedStatement.executeUpdate();  // 执行第一条sql
+
+            int i = 1 / 0;  // 没有使用事务
+
+            preparedStatement = connection.prepareStatement(sql2);
+            preparedStatement.executeUpdate();  // 执行第二条sql
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        } finally {
+            // 关闭资源
+            JDBCUtils.close(null, preparedStatement, connection);
+        }
+    }
+
+    @Test
+    public void useTransaction() {
+        // 1. 得到连接
+        Connection connection = null;
+        // 2. 编写sql
+        String sql1 = "update account set balance = balance - 100 where id = 1;";
+        String sql2 = "update account set balance = balance + 100 where id = 2;";
+        // 3. 创建 PreparedStatement 对象
+        PreparedStatement preparedStatement = null;
+        try {
+            connection = JDBCUtils.getConnection();
+
+            // 将 connection 设置为不自动提交
+            connection.setAutoCommit(false);    // 相当于在这开启了事务
+
+            preparedStatement = connection.prepareStatement(sql1);
+            preparedStatement.executeUpdate();  // 执行第一条sql
+
+//            int i = 1 / 0;  // 模拟异常
+
+            preparedStatement = connection.prepareStatement(sql2);
+            preparedStatement.executeUpdate();  // 执行第二条sql
+
+            // 在这里提交事务
+            connection.commit();
+        } catch (Exception e) {
+            // 这里可以进行回滚，即撤销执行的SQL
+            System.out.println("执行发生了异常，撤销执行的sql语句");
+            try {
+                // 默认回滚到事务开始的状态
+                connection.rollback();
+            } catch (SQLException ex) {
+                throw new RuntimeException(ex);
+            }
+            e.printStackTrace();
+        } finally {
+            // 关闭资源
+            JDBCUtils.close(null, preparedStatement, connection);
+        }
+    }
+}
+```
+
+### 批处理
+
+- 当需要成批插入或者更新记录时，可以采用Java的批量更新机制，这一机制允许多条语句一次性提交给数据库批量处理，
+  通常情况下比单独提交处理更有效率
+- ![img_7.png](JDBC/imgs/img_7.png)
+- JDBC连接Mysql时，如果要使用批处理功能，需要在url中加入参数 `?rewriteBatchedStatements=true`，如
+  `url=jdbc:mysql://localhost:3306/hsp_db02?rewriteBatchedStatements=true`
+
+```java
+package com.charlie.jdbc.batch_;
+
+import com.charlie.jdbc.utils.JDBCUtils;
+import org.junit.Test;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+
+/**
+ * 演示java批处理
+ */
+public class Batch_ {
+
+    // 传统方法，添加5000条数据到admin2
+    @Test
+    public void noBatch() throws SQLException {
+        Connection connection = JDBCUtils.getConnection();
+        String sql = "insert into admin2 values (null, ?, ?);";
+        PreparedStatement preparedStatement = connection.prepareStatement(sql);
+        System.out.println("===开始执行===");
+        long start = System.currentTimeMillis();
+        for (int i = 0; i < 5000; i++) {    // 5000次循环
+            preparedStatement.setString(1, "jack" + i);
+            preparedStatement.setString(2, "666");
+            preparedStatement.executeUpdate();
+        }
+        long end = System.currentTimeMillis();
+        System.out.println("传统方法 耗时：" + (end - start)); // 2477ms
+        // 关闭连接
+        JDBCUtils.close(null, preparedStatement, connection);
+    }
+
+    // 使用批量方式添加数据
+    @Test
+    public void batch() throws SQLException {
+        Connection connection = JDBCUtils.getConnection();
+        String sql = "insert into admin2 values (null, ?, ?)";  // 注意sql语句的末尾不要加分号 ;
+        PreparedStatement preparedStatement = connection.prepareStatement(sql);
+        System.out.println("===开始执行===");
+        long start = System.currentTimeMillis();
+        for (int i = 0; i < 5000; i++) {    // 5000次循环
+            preparedStatement.setString(1, "jack" + i);
+            preparedStatement.setString(2, "666");
+
+            // 将sql语句加入到批处理包中
+            /*  看源码 addBatch()
+                1. 第一次会创建 ArrayList - elementData => Object[]
+                2. elementData => Object[] 存放预处理的sql语句
+                3. 当elementData满后，就按照1.5倍扩容
+                4. 当添加到指定值后，就执行批量处理 executeBatch
+                5. 批量处理会减少发送sql语句的次数，而且减少编译次数，因此效率提高
+                public void addBatch() throws SQLException {
+                    synchronized(this.checkClosed().getConnectionMutex()) {
+                        if (this.batchedArgs == null) {
+                            this.batchedArgs = new ArrayList();
+                        }
+
+                        for(int i = 0; i < this.parameterValues.length; ++i) {
+                            this.checkAllParametersSet(this.parameterValues[i], this.parameterStreams[i], i);
+                        }
+
+                        this.batchedArgs.add(new BatchParams(this.parameterValues, this.parameterStreams, this.isStream, this.streamLengths, this.isNull));
+                    }
+                }
+             */
+            preparedStatement.addBatch();
+            // 当有1000条记录时，再批量执行
+            if ((i + 1) % 1000 == 0) {
+                preparedStatement.executeBatch();
+                // 清空一把
+                preparedStatement.clearBatch();
+            }
+        }
+        long end = System.currentTimeMillis();
+        System.out.println("批量方式 耗时：" + (end - start)); //批量方式耗时： 34ms
+        // 关闭连接
+        JDBCUtils.close(null, preparedStatement, connection);
+    }
+}
+```
+
+### 数据库连接池
+
+- 传统获取Connection问题分析
+- ![img_8.png](JDBC/imgs/img_8.png)
+
+```java
+package com.charlie.jdbc.datasource;
+
+import com.charlie.jdbc.utils.JDBCUtils_Test;
+import org.junit.Test;
+
+import java.sql.Connection;
+
+public class ConnQuestion {
+    // 测试连接MySQL 5000次
+    @Test
+    public void testConn() {
+        long start = System.currentTimeMillis();
+        for (int i = 0; i < 5000; i++) {
+            // 使用传统jdbc方式，得到连接
+            Connection connection = JDBCUtils_Test.getConnection();
+            // 这里可以做一些工作，比如得到 preparedStatement
+            /********** 不断开连接会报错 ： "Too many connections"  ***************/
+            // 关闭
+            JDBCUtils_Test.close(null, null, connection);
+        }
+        long end = System.currentTimeMillis();
+        System.out.println("传统方式连接5000次，耗时：" + (end - start));  // 4145ms
+    }
+}
+```
+
+- 数据库连接池基本介绍
+- ![img_9.png](JDBC/imgs/img_9.png)
+- [c3p0](JDBC/src/com/charlie/jdbc/datasource/C3P0_.java)
+- [druid](JDBC/src/com/charlie/jdbc/datasource/Druid_.java)
+- [JDBCUtilsByDruid](JDBC/src/com/charlie/jdbc/utils/JDBCUtilsByDruid.java)
+
+```java
+package com.charlie.jdbc.datasource;
+
+import com.mchange.v2.c3p0.ComboPooledDataSource;
+import org.junit.Test;
+
+import javax.swing.plaf.IconUIResource;
+import java.beans.PropertyVetoException;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.Properties;
+
+/**
+ * 演示c3p0的使用
+ */
+public class C3P0_ {
+    // 方式1：相关参数，在程序中指定 user, url, password等
+    @Test
+    public void testC3P0_01() throws Exception {
+        // 1. 创建一个数据源对象
+        ComboPooledDataSource comboPooledDataSource = new ComboPooledDataSource();
+        // 2. 通过配置文件 mysql.properties 获取相关的信息
+        Properties properties = new Properties();
+        properties.load(new FileInputStream("src\\mysql.properties"));
+        String url = properties.getProperty("url");
+        String user = properties.getProperty("user");
+        String password = properties.getProperty("password");
+        String driver = properties.getProperty("driver");
+        // 3. 给数据源 comboPooledDataSource 设置相关的参数
+        // 注意：连接管理是由 comboPooledDataSource 来管理
+        comboPooledDataSource.setDriverClass(driver);
+        comboPooledDataSource.setJdbcUrl(url);
+        comboPooledDataSource.setUser(user);
+        comboPooledDataSource.setPassword(password);
+
+        // 设置初始化连接数
+        comboPooledDataSource.setInitialPoolSize(10);
+        // 设置最大连接数
+        comboPooledDataSource.setMaxPoolSize(50);
+
+        // 测试连接池的效率，连接mysql 5000次操作
+        long start = System.currentTimeMillis();
+        for (int i = 0; i < 5000; i++) {
+            // 获取连接
+            Connection connection = comboPooledDataSource.getConnection();
+            // 关闭连接
+            connection.close();
+        }
+        long end = System.currentTimeMillis();
+        System.out.println("C3P0 5000次连接mysql，耗时：" + (end - start));    // 193
+    }
+
+    // 第二种方式：使用配置文件模板来完成
+    // 1. 将c3p0提供的 c3p0.config,xml 拷贝到 src 目录下
+    // 2. 该文件指定了连接数据库和连接池的相关参数
+    @Test
+    public void testC3P0_02() throws SQLException {
+        ComboPooledDataSource comboPooledDataSource = new ComboPooledDataSource("hsp_edu");
+        long start = System.currentTimeMillis();
+        for (int i = 0; i < 5000; i++) {
+            Connection connection = comboPooledDataSource.getConnection();
+//            System.out.println("连接成功~");
+            connection.close();
+        }
+        long end = System.currentTimeMillis();
+        System.out.println("C3P0 5000次连接mysql，耗时：" + (end - start));    // 197
+    }
+}
+```
+
+```java
+package com.charlie.jdbc.datasource;
+
+import com.alibaba.druid.pool.DruidDataSourceFactory;
+import org.junit.Test;
+
+import javax.sql.DataSource;
+import java.io.FileInputStream;
+import java.sql.Connection;
+import java.util.Properties;
+
+public class Druid_ {
+    @Test
+    public void testDruid() throws Exception {
+        // 1. 加入 Druid jar包
+        // 2. 加入 配置文件 到 src 目录下
+        // 3. 创建 Properties 对象，读取配置文件
+        Properties properties = new Properties();
+        properties.load(new FileInputStream("src\\druid.properties"));
+        // 4. 创建一个指定参数的数据库连接池
+        DataSource dataSource = DruidDataSourceFactory.createDataSource(properties);
+        long start = System.currentTimeMillis();
+        for (int i = 0; i < 5000; i++) {
+            Connection connection = dataSource.getConnection();
+//            System.out.println("连接成功...");
+            connection.close();
+        }
+        long end = System.currentTimeMillis();
+        System.out.println("Druid连接池，连接5000次耗时：" + (end - start));  // 260
+    }
+}
+```
+
+```java
+package com.charlie.jdbc.utils;
+
+import com.alibaba.druid.pool.DruidDataSourceFactory;
+
+import javax.sql.DataSource;
+import java.io.FileInputStream;
+import java.sql.*;
+import java.util.Properties;
+
+/**
+ * 基于Druid数据库连接池的工具类
+ */
+public class JDBCUtilsByDruid {
+    private static final String druidProperties = "src\\druid.properties";
+    private static final DataSource ds;
+
+    // 测试 该工具类
+    public static void main(String[] args) throws Exception {
+        String sql = "select * from admin";
+        Connection connection = JDBCUtilsByDruid.getConnection();
+        // class com.alibaba.druid.pool.DruidPooledConnection
+        System.out.println(connection.getClass());
+        PreparedStatement preparedStatement = connection.prepareStatement(sql);
+        ResultSet resultSet = preparedStatement.executeQuery(sql);
+        while (resultSet.next()) {
+            int id = resultSet.getInt("id");
+            String name = resultSet.getString("name");
+            String pwd = resultSet.getString("pwd");
+            System.out.println(id + "\t" + name + "\t" + pwd);
+        }
+        JDBCUtilsByDruid.close(resultSet, preparedStatement, connection);
+    }
+
+    static {
+        Properties properties = new Properties();
+        try {
+            properties.load(new FileInputStream(druidProperties));
+            ds = DruidDataSourceFactory.createDataSource(properties);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static Connection getConnection() throws SQLException {
+        return ds.getConnection();
+    }
+
+    // 关闭连接，注意：在数据库连接池技术中，close不是真正地断掉连接
+    // 而是把使用的 Connection对象 放回到连接池
+    public static void close(ResultSet set, PreparedStatement preparedStatement, Connection connection) {
+        try {
+            if (set != null) {
+                set.close();
+            }
+            if (preparedStatement != null) {
+                preparedStatement.close();
+            }
+            if (connection != null) {
+                connection.close();
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+}
+```
+
+### Apache-DBUtils
+
+现有问题：
+1. 关闭 `connection`后，`resultSet`结果集无法使用
+2. `resultSet`不利于数据管理
+3. ![img_10.png](JDBC/imgs/img_10.png)
+
+```java
+package com.charlie.jdbc.utils;
+
+import org.junit.Test;
+
+import java.sql.*;
+import java.util.ArrayList;
+
+/**
+ * 基于Druid数据库连接池的工具类
+ */
+public class JDBCUtilsByDruid_USE {
+
+    @Test
+    public ArrayList<Actor> testSelectToArrayList() {
+        Connection connection = null;
+        PreparedStatement preparedStatement = null;
+        ResultSet set = null;
+
+        // 创建ArrayList对象，存放actor对象
+        ArrayList<Actor> list = new ArrayList<>();
+
+        try {
+            connection = JDBCUtilsByDruid.getConnection();
+            String sql = "select * from actor where id >= ?;";
+            preparedStatement = connection.prepareStatement(sql);
+            preparedStatement.setInt(1, 3);
+            set = preparedStatement.executeQuery();
+            while (set.next()) {
+                int id = set.getInt("id");
+                String name = set.getString("name");
+                String gender = set.getString("gender");
+                Date date = set.getDate("borndate");
+                String phone = set.getString("phone");
+
+                // 把得到的resultSet的记录，封装到Actor对象，放入到list集合
+                list.add(new Actor(id, name, gender, date, phone));
+            }
+//            System.out.println("list集合数据：" + list);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        } finally {
+            // 关闭资源
+            JDBCUtilsByDruid.close(set, preparedStatement, connection);
+        }
+        
+        // 因为 ArrayList 和 connection 没有任何关联，所以该集合可以在关闭连接后继续使用
+        return list;
+    }
+}
+```
+
+- ![img_11.png](JDBC/imgs/img_11.png)
+
+```java
+package com.charlie.jdbc.datasource;
+
+import com.charlie.jdbc.utils.Actor;
+import com.charlie.jdbc.utils.JDBCUtilsByDruid;
+import org.apache.commons.dbutils.QueryRunner;
+import org.apache.commons.dbutils.handlers.BeanHandler;
+import org.apache.commons.dbutils.handlers.BeanListHandler;
+import org.apache.commons.dbutils.handlers.ScalarHandler;
+import org.junit.Test;
+
+import java.sql.*;
+import java.util.List;
+
+/**
+ * 基于Druid数据库连接池的工具类
+ */
+public class DBUtils_USE {
+
+    // 使用 apache-DBUtils 工具类 + druid 完成对表的 crud 操作
+    @Test
+    public void testQueryMany() throws SQLException {
+        // 1. 得到连接 druid
+        Connection connection = JDBCUtilsByDruid.getConnection();
+        // 2. 使用 DBUtils 类和接口，先引进 DBUtils 相关的 jar，加入到本project
+        // 3. 创建 QueryRunner
+        QueryRunner queryRunner = new QueryRunner();
+        // 4. 就可以执行相关的方法，返回 ArrayList 结果集
+//        String sql = "select * from actor where id >= ?";
+        // 注意：sql语句也可以查询部分属性
+        String sql = "select id, name from actor where id >= ?";
+
+        /*
+        1) query() 方法就是执行 sql语句，得到 resultSet --封装到--> ArrayList集合中
+        2) 返回集合
+        3) connection：连接
+        4) sql：执行的sql语句
+        5) new BeanListHandler<>(Actor.class) 在将resultSet -> Actor对象 -> 封装到 ArrayList
+                底层使用反射机制获取 Actor类的属性，然后进行封装
+        6) 1 就是传给 sql语句中的 ? 赋值，可以有多个值，因为是可变参数 Object... params
+        7) 底层得到的 resultSet 会在 query 关闭，关闭 preparedStatement
+         */
+        /**
+         *     public <T> T query(Connection conn, String sql, ResultSetHandler<T> rsh, Object... params) throws SQLException {
+         *         PreparedStatement stmt = null;   // 定义 PreparedStatement
+         *         ResultSet rs = null;             // 接收返回的 ResultSet
+         *         T result = null;                 // 返回 ArrayList
+         *
+         *         try {
+         *             stmt = this.prepareStatement(conn, sql); // 创建 PreparedStatement
+         *             this.fillStatement(stmt, params);        // 对 sql 进行 ? 赋值
+         *             rs = this.wrap(stmt.executeQuery());     // 执行sql 返回 resultSet
+         *             result = rsh.handle(rs);                 // 返回的 resultSet --> ArrayList[resultSet] 底层使用到反射机制
+         *         } catch (SQLException var33) {
+         *             this.rethrow(var33, sql, params);
+         *         } finally {
+         *             try {
+         *                 this.close(rs);                      // 关闭 resultSet
+         *             } finally {
+         *                 this.close((Statement)stmt);         // 关闭 preparedStatement
+         *             }
+         *         }
+         *
+         *         return result;
+         *     }
+         */
+        List<Actor> list =
+                queryRunner.query(connection, sql, new BeanListHandler<>(Actor.class), 1);
+        System.out.println("输出集合信息");
+        for (Actor actor : list) {
+            System.out.print(actor);
+        }
+        // 释放资源
+        JDBCUtilsByDruid.close(null, null, connection);
+    }
+
+    // 演示 apache-dbutils + druid 完成 返回的结果是单行记录(单个对象)
+    @Test
+    public void testQuerySingle() throws SQLException {
+        // 1. 得到连接 druid
+        Connection connection = JDBCUtilsByDruid.getConnection();
+        // 2. 使用 DBUtils类和接口，创建 QueryRunner
+        QueryRunner queryRunner = new QueryRunner();
+        // 3. 执行相关方法，返回单个对象
+        String sql = "select * from actor where id = ?";
+        /*
+        因为知道返回的是单行记录 <----> 单个对象，使用 Handler 是 BeanHandler
+         */
+        Actor actor = queryRunner.query(connection, sql, new BeanHandler<>(Actor.class), 4);
+        if (actor != null) {
+            System.out.println(actor);
+        } else {
+            System.out.println("查无此记录~");
+        }
+        // 释放资源
+        JDBCUtilsByDruid.close(null, null, connection);
+    }
+
+    // 演示 apache-dbutils + druid 完成查询结果是单行单列-返回的就是object
+    @Test
+    public void testScalar() throws SQLException {
+        Connection connection = JDBCUtilsByDruid.getConnection();
+        QueryRunner queryRunner = new QueryRunner();
+        String sql = "select name from actor where id = ?";
+        /*
+        因为返回的是一个对象，使用的 handler 是 ScalarHandler
+         */
+        Object obj = queryRunner.query(connection, sql, new ScalarHandler(), 3);
+        if (obj == null) {
+            System.out.println("查无此人");
+        } else {
+            System.out.println(obj);
+        }
+        JDBCUtilsByDruid.close(null, null, connection);
+    }
+
+    // 演示 apache-dbutils + druid 完成 dml (update, insert, delete)
+    @Test
+    public void testDML() throws SQLException {
+        Connection connection = JDBCUtilsByDruid.getConnection();
+        QueryRunner queryRunner = new QueryRunner();
+        // 这里组织sql语句完成 update, insert, delete
+//        String sql = "update actor set name = ? where id = ?";
+//        String sql = "insert into actor values (null, '侯亮平', '男', '1975-1-9', '166')";
+        String sql = "delete from actor where id = ?";
+        /*
+        1. 执行 dml 操作是 queryRunner.update()
+        2. 返回值是受影响的行数
+         */
+        int affectedRow = queryRunner.update(connection, sql, 4);
+        System.out.println(affectedRow > 0 ? "执行成功！" : "执行未影响到表");
+        JDBCUtilsByDruid.close(null, null, connection);
+    }
+}
+```
+
+- 表和JavaBean的类型映射关系
+- ![img_12.png](JDBC/imgs/img_12.png)
+- `int`和`double`等在Java中都用**包装类**，因为mysql中的所有类型都可能是 `null`，而Java只有引用数据类型才有Null值
+
+### DAO和增删改查通用方法-BasicDao
+
+- `apache-dbutils` + `druid`简化了JDBC开发，但还有不足：
+1. SQL语句是固定的，不能通过参数传入，通用性不好，需要进行改进，更方便执行**增删改查**
+2. 对于select操作，如果有返回值，返回类型不能固定，需要使用泛型
+3. 将来的表很多，业务需求复杂，不可能只靠一个Java类完成
+4. 引入 ---> BasicDAO
+- ![img_13.png](JDBC/imgs/img_13.png)
+- `DAO`：(data access object)数据访问对象
+- `BasicDao`即通用类，是专门和数据库交互的，即完成对数据库(表)的crud操作
+- 在`BasicDao`的基础商，实现一张表对应一个Dao，更好的完成功能，
+  比如 `Customer`表-`Customer.java`类(javabean)-`CustomerDao.java`
+- ![设计架构](JDBC/imgs/img_14.png)
+
+- [dao/BasicDAO](JDBC/src/com/charlie/dao_/dao/BasicDAO.java)
+- [dao/ActorDAO](JDBC/src/com/charlie/dao_/dao/ActorDAO.java)
+- [domain/Actor](JDBC/src/com/charlie/dao_/domain/Actor.java)
+- [utils](JDBC/src/com/charlie/dao_/utils/JDBCUtilsByDruid.java)
+- [test/TestDAO](JDBC/src/com/charlie/dao_/test/TestDAO.java)
+
+## 正则表达式
+
+### 正则表达式原理
+
+- regular expression => RegExp
+- 一个正则表达式，就是用某种模式去匹配字符串的一个公式。
+
+- 正则表达式的原理
+- ![img.png](chapter27_regular_expression/imgs/img.png)
+
+```java
+package com.charlie.regexp;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+/**
+ * 分析java的正则表达式底层实现
+ */
+public class RegTheory {
+    public static void main(String[] args) {
+        String content = "1998年12月8日，第二代Java平台的企业版J2EE发布。1999年6月，Sun公司发布了" +
+                "第二代Java平台（简称为Java2）的3个版本：J2ME（Java2 Micro Edition，Java2平台的微型" +
+                "版），应用于移动、无线及有限资源的环境；J2SE（Java 2 Standard Edition，Java 2平台的" +
+                "标准版），应用于桌面环境；J2EE（Java 2Enterprise Edition，Java 2平台的企业版），应" +
+                "用3443于基于Java的应用服务器。Java 2平台的发布，是Java发展过程中最重要的一个" +
+                "里程碑，标志着Java的应用开始普及9889 ";
+        // 目标：匹配所有四个数字
+        // 1. \\d 表示一个任意的数字(0-9)
+        String regStr = "(\\d\\d)(\\d\\d)";
+        // 2. 创建模式对象，即正则表达式对象
+        Pattern pattern = Pattern.compile(regStr);
+        // 3. 创建匹配器
+        // 创建匹配器 matcher，按照正则表达式规则去匹配content字符串
+        Matcher matcher = pattern.matcher(content);
+        // 4. 开始匹配
+        /**
+         * matcher.find() 完成的工作
+         * 1) 根据指定的规则 pattern ，定位满足规则的子字符串(比如1998)
+         * 2) 找到后，将子字符串的开始索引记录到 matcher对象的属性 int[] groups;
+         *  groups[0] = 0; 把该字符串的结果的索引+1的值记录到 group[1] = 4;
+         * 3) 同时记录 oldLast 的值为 子字符串的结束的 索引+1的值即4，即下次执行 find是，就从4开始匹配
+         * 4) matcher.group(0)
+         *     public String group(int group) {
+         *         if (first < 0)
+         *             throw new IllegalStateException("No match found");
+         *         if (group < 0 || group > groupCount())
+         *             throw new IndexOutOfBoundsException("No group " + group);
+         *         if ((groups[group*2] == -1) || (groups[group*2+1] == -1))
+         *             return null;
+         *         return getSubSequence(groups[group * 2], groups[group * 2 + 1]).toString();
+         *     }
+         *     1. 根据 groups[0]=0 和 groups[1]=4 的记录的位置，从content开始截取子字符串并返回
+         *          就是 [0, 4) 包含0但是不包含索引为4的位置
+         * 5) 如果再次执行 find() 方法，仍然按照上面分析来执行
+         *
+         *
+         * 分组情况：当正则表达式中有小括号()时，比如 (\d\d)(\d\d)，第1个()表示第1组，第2个()表示第2组
+         * 1) 根据指定的规则 pattern ，定位满足规则的子字符串，比如 (19)(98)
+         * 2) 找到后，将子字符串的开始索引记录到 matcher对象的属性 int[] groups;
+         *      2.1) groups[0] = 0，把该字符串的 结束的索引+1 的值记录到 groups[1] = 4;
+         *      2.2) 把记录第1组()匹配到的字符串 groups[2] = 0, groups[3] = 2;
+         *      2.3) 把记录第2组()匹配到的字符串 groups[4] = 2, groups[4] = 4;
+         *      2.4) 如果有更多的分组，继续匹配
+         * 3) 同时记录 oldLast 的值为 子字符串的结束的 索引+1的值即4，即下次执行 find是，就从4开始匹配
+         * 4) matcher.group(0)
+         */
+        while (matcher.find()) {
+            System.out.println("匹配到：" + matcher.group(0) + " "
+                            + matcher.group(1) + " " + matcher.group(2));
+            /*
+            matcher.group(0)仍然记录整个正则表达式匹配到的字符串
+            匹配到：1998 19 98
+            匹配到：1999 19 99
+            匹配到：3443 34 43
+            匹配到：9889 98 89
+             */
+        }
+    }
+}
+```
+
+### 正则表达式语法
+
+1. 限定符
+2. 选择匹配符
+3. 分组组合和反向引用符
+4. 特殊字符
+5. 字符匹配符
+6. 定位符
+
+- 元字符(`Metacharacter`)-转义符号 `\\`
+    - ![元字符](chapter27_regular_expression/imgs/img_1.png)
+    - 需要用到转义符号的有 `.*+()$/\?[]^{}`
+
+```java
+package com.charlie.regexp;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+public class RegExp02 {
+    public static void main(String[] args) {
+        String content = "abc$(abcd(123(";
+        // 匹配 ( => \\(
+        // 匹配 . => \\.
+        String regStr = "\\(";
+        Pattern pattern = Pattern.compile(regStr);
+        Matcher matcher = pattern.matcher(content);
+        while (matcher.find()) {
+            System.out.println(matcher.group(0));
+        }
+    }
+}
+```
+
+| 符号    | 符号                                  | 示例             | 解释                                          |
+|-------|-------------------------------------|----------------|---------------------------------------------|
+| `[]`  | 可接收的字符列表                            | `[efgh]`       | `efgh`中的任意1个字符                              |
+| `[^]` | 不可接收的字符列表                           | `[^abc]`       | 除`abc`之外的任意1个字符，包括数字和特殊字符                   |
+| `-`   | 连字符                                 | `A-Z`          | 任意单个大写字母                                    |
+| `.`   | 匹配除`\n`以外的任何字符                      | `a..b`         | 以a开头，b结尾，中间包括2个任意字符的长度为4的字符串，如`aaab`,`a3#b` |
+| `\\d` | 匹配单个数字字符，相当于`[0-9]`                 | `\\d{3}(\\d)?` | 包含3个活4个数字的字符串，如`123`,`9527`                 |
+| `\\D` | 匹配单个非数字字符，相当于`[^0-9]`               | `\\D(\\d)*`    | 以单个非数字字符开头，后接任意个数字字符串，如`a`,`A342`           |
+| `\\w` | 匹配单个数字、大小写字母字符和下划线，相当于`[0-9a-zA-Z]` | `\\d{3}\\w{4}` | 以3个数字字符揩油的长度为7的数字字母字符串，如`234abcd`,`12345Pe` |
+| `\\W` | 匹配单个非数字、大小写字母字符，相当于`[^0-9a-zA-Z]`   | `\\W+\\d{2}`   | 以至少1个非数字字母字符开头，2个数字字符结尾的字符串，如`#29`,`#?@10`  |
+| `\\s` | 匹配任何空白字符(空格，制表符等)                   |                |                                             |
+| `\\S` | 匹配任何非空白字符，和`\\s`刚好相反                |                |                                             |
+
+> 中括号`{}`中表示字符出现的次数，如 `\\d{3}` 表示连续3个数字
 >
-> `P645~P660`：坦克大战
+> `?`表示0个或1个，如 `\\d(\\d)?`表示包含3个或4和数字的字符串
+>
+> `*`表示任意个数的字符，如 `\\D(\\d)*`表示以单个非数字字符开头，后接任意个数字字符
+>
+> `+`表示至少1个字符，如 `\\W+\\d{2}` 表示以至少1个非数字字母字符开头，2个数字字符结尾的字符串
 
-## END
+- java正则表达式默认区分大小写，如何实现不区分大小写
+    - `(?i)abc`表示abc都不区分大小写
+    - `a(?i)bc`表示bc不区分大小写
+    - `a((?i)b)c`表示只有b不区分大小写
+    - `Pattern.compile(regExp, Pattern.CASE_INSENSITIVE);`
+
+#### 选择匹配符
+
+- 元字符-**选择匹配符**
+    - 在匹配某个字符串的时候是选择性的，即既可以匹配这个，又可以匹配哪个，这时需要用到选择匹配符号 `|`
+    - ![选择匹配符](chapter27_regular_expression/imgs/img_2.png)
+
+#### 限定符
+
+| 符号       | 含义                        | 示例            | 说明                           | 匹配输入                    |
+|----------|---------------------------|---------------|------------------------------|-------------------------|
+| `*`      | 指定字符重复0次或n次(无要求)-**0到多**  | `(abc)*`      | 仅包含任意个abc的字符串，等效于`\w?`       | ![img_3.png](chapter27_regular_expression/imgs/img_3.png) |
+| `+`      | 指定字符重复1次或n次(至少一次)-**1到多** | `m+(abc)*`    | 以至少1个m开头，后接任意个abc的字符串        | ![img_4.png](chapter27_regular_expression/imgs/img_4.png) |
+| `?`      | 指定字符重复0次或1次(最多一次)-**0到1** | `m+abc?`      | 以至少1个m开头，后接ab或abc的字符串        | ![img_5.png](chapter27_regular_expression/imgs/img_5.png) |
+| `{n}`    | 只能输入n个字符                  | `[abcd]{3}`   | 由abcd中字母组成的任意长度为3的字符串        | ![img_6.png](chapter27_regular_expression/imgs/img_6.png) |
+| `{n,}`   | 指定至少n个匹配                  | `[abcd]{3,}`  | 由abcd中字母组成的任意长度不小于3的字符串      | ![img_7.png](chapter27_regular_expression/imgs/img_7.png) |
+| `{n, m}` | 指定至少n个但不多于m个匹配            | `[abcd]{3,5}` | 由abcd中字母组成的任意长度不小于3，不大于5的字符串 | ![img_8.png](chapter27_regular_expression/imgs/img_8.png) |
+
+```java
+package com.charlie.regexp;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+/**
+ * 演示限定符的使用
+ */
+public class RegExp05 {
+    public static void main(String[] args) {
+        String content = "a1111111aaaaaahello";
+//        String regStr = "a{3}"; // 匹配 aaa
+//        String regStr = "1{4}"; // 匹配 1111
+//        String regStr = "\\d{2}";   // 表示匹配 两位的任意数字字符
+
+        // java是贪婪匹配，即尽可能匹配多的
+//        String regStr = "a{3,4}";   // 表示匹配 aaa 或 aaaa
+//        String regStr = "\\d{2,5}";   // 表示匹配 2/3/4/5位数
+
+//        String regStr = "1+";   // 表示匹配 1个或多个 1，默认仍然是贪婪匹配
+        String regStr = "a1?";   // 表示匹配 a 或 a1
+
+        Pattern pattern = Pattern.compile(regStr);
+        Matcher matcher = pattern.matcher(content);
+        while (matcher.find()) {
+            System.out.println("匹配到：" + matcher.group(0));
+        }
+    }
+}
+```
+
+#### 定位符
+
+- ![定位符](chapter27_regular_expression/imgs/img_9.png)
+
+```java
+package com.charlie.regexp;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+/**
+ * 演示定位符的使用
+ */
+public class RegExp06 {
+    public static void main(String[] args) {
+//        String content = "123abc";
+        String content = "hanshunping sphan nnhan";
+//        String regStr = "^[0-9]+[a-z]*";    // 以至少1个数字开头，后接任意个小写字母的字符串
+//        String regStr = "^[0-9]+[a-z]+$";    // 以至少1个数字开头，必须以1小写字母结束
+
+//        String regStr = "han\\b";    // 表示匹配右边界的han，边界可以是字符串最后，也可以是空格分隔的子串
+        String regStr = "han\\B";    // 表示匹配左边界的han，边界可以是字符串最后，也可以是空格分隔的子串
+
+        Pattern pattern = Pattern.compile(regStr);
+        Matcher matcher = pattern.matcher(content);
+        while (matcher.find()) {
+            System.out.println("匹配到：" + matcher.group(0));
+        }
+    }
+}
+```
+
+#### 分组
+
+- ![分组1](chapter27_regular_expression/imgs/img_10.png)
+
+```java
+package com.charlie.regexp;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+public class RegExp07 {
+    public static void main(String[] args) {
+        String content = "hanshunping s7789 nn1895han";
+
+        // 非命名分组
+        /*
+        1. matcher.group(0) 得到匹配到的字符串
+        1. matcher.group(1) 得到匹配到的字符串的第1个分组内容
+        1. matcher.group(2) 得到匹配到的字符串的第2个分组内容
+         */
+        // String regStr = "(\\d\\d)(\\d\\d)"; // 匹配4个数字的字符串
+
+        // 命名分组：即可以给分组取名
+        String regStr = "(?<g1>\\d\\d)(?<g2>\\d\\d)"; // 匹配4个数字的字符串
+
+        Pattern pattern = Pattern.compile(regStr);
+        Matcher matcher = pattern.matcher(content);
+        while (matcher.find()) {
+            System.out.println("匹配到：" + matcher.group(0));
+            System.out.println("第1个分组内容：" + matcher.group(1));
+            System.out.println("通过组名取得内容：" + matcher.group("g1"));
+            System.out.println("第2个分组内容：" + matcher.group(2));
+            System.out.println("通过组名取得内容：" + matcher.group("g2"));
+        }
+    }
+}
+```
+
+- 非捕获分组
+- ![非捕获分组](chapter27_regular_expression/imgs/img_11.png)
+
+```java
+package com.charlie.regexp;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+/**
+ * 演示非捕获分组，语法比较奇怪
+ */
+public class RegExp08 {
+    public static void main(String[] args) {
+        String content = "韩顺平 韩顺平你好 hello韩顺平教育 韩顺平老师jack 韩顺平同学js";
+
+//        String regStr = "韩顺平教育|韩顺平老师|韩顺平同学";
+        // 上面的写法可以等价的非捕获分组
+//        String regStr = "韩顺平(?:教育|老师|同学)";  // 韩顺平教育 韩顺平老师 韩顺平同学
+//        String regStr = "韩顺平(?=教育|老师)";  // 只匹配 韩顺平教育或韩顺平老师 中的 韩顺平
+        String regStr = "韩顺平(?!教育|老师)";  // 找到 韩顺平 这个关键字，但是要求不是 韩顺平教育和韩顺平老师 中包含有的韩顺平
+
+        Pattern pattern = Pattern.compile(regStr);
+        Matcher matcher = pattern.matcher(content);
+        while (matcher.find()) {
+            System.out.println("匹配到：" + matcher.group(0));
+        }
+    }
+}
+```
+
+- [非贪婪匹配](chapter27_regular_expression/src/com/charlie/regexp/RegExp09.java)
+- [匹配URL](chapter27_regular_expression/src/com/charlie/regexp/RegExp11.java)
+
+### 正则表达式三个常用类
+
+`java.util.regex`包主要包括以下三个类
+- `Pattern`类
+    - ![img_12.png](chapter27_regular_expression/imgs/img_12.png)
+- `Matcher`类
+    - ![img_13.png](chapter27_regular_expression/imgs/img_13.png)
+    - ![Matcher类的方法](chapter27_regular_expression/imgs/img_15.png)
+    - ![Matcher类的方法](chapter27_regular_expression/imgs/img_16.png)
+- `PatternSyntaxException`类
+    - ![img_14.png](chapter27_regular_expression/imgs/img_14.png)
+
+```java
+package com.charlie.regexp;
+
+import java.util.regex.Pattern;
+
+/**
+ * 演示 matches方法，用于整体匹配，在验证输入的字符串是否满足条件时使用
+ */
+public class PatternMethod {
+    public static void main(String[] args) {
+        String content = "hello abc hello, world";
+//        String regStr = "hello";  // false 只匹配到部分内容
+        String regStr = "hello.*";  // true 整体匹配
+        boolean matches = Pattern.matches(regStr, content);
+        System.out.println("整体匹配：" + matches);
+    }
+}
+```
+
+```java
+package com.charlie.regexp;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+/**
+ * Matcher类的常用方法
+ */
+public class MatcherMethod {
+    public static void main(String[] args) {
+        String content = "hello edu charlie haha~ hello Monkey.D.Luff";
+        String regStr = "hello";
+        Pattern pattern = Pattern.compile(regStr);
+        Matcher matcher = pattern.matcher(content);
+        while (matcher.find()) {
+            System.out.println("==================");
+            // 返回匹配到的起止索引
+            System.out.println(matcher.start() + ": " + matcher.end());
+            System.out.println("匹配到：" + content.substring(matcher.start(), matcher.end()));
+//            System.out.println("匹配到：" + matcher.group(0));
+        }
+
+        // 整体匹配方法，常用于检验某个字符串是否满足某个规则
+        System.out.println("整体匹配：" + matcher.matches());
+
+        // 如果有charlie，就替换为bruce
+        regStr = "charlie";
+        pattern = Pattern.compile(regStr);
+        matcher = pattern.matcher(content);
+        // 注意：返回的字符串才是替换后的字符串
+        String newContent = matcher.replaceAll("bruce");
+        System.out.println("替换结果：" + newContent);   // hello edu bruce haha~ hello Monkey.D.Luff
+    }
+}
+```
+
+### 分组、捕获、反向引用
+
+- ![img_17.png](chapter27_regular_expression/imgs/img_17.png)
+
+```java
+package com.charlie.regexp;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+public class RegExp12 {
+    public static void main(String[] args) {
+        String content = "Hello17 12315-777999111jack tom11, jack22 yyy666666 xx5225 leslie1551";
+
+        // 匹配一个二位数，个十位数字相同
+//        String regStr = "(\\d)\\1"; // 11 22 66 66 66
+        // 匹配五个连续的相同数字：(\\d)\\1{4}
+//        String regStr = "(\\d)\\1{4}";  // 66666
+        // 匹配个位与千位相同，十位与百位相同的数，如 5225 1551 (\\d)(\\d)\\2\\1
+//        String regStr = "(\\d)(\\d)\\2\\1"; // 6666 5225 1551
+
+        /**
+         * 在字符串中检索商品编号，形式如：12321-333999111 这样的号码。
+         * 要求满足前面是一个五位数，然后一个-号，后面是一个九位数，连续的每三位要相同
+         */
+        String regStr = "\\d{5}-(\\d)\\1{2}(\\d)\\2{2}(\\d)\\3{2}";
+
+        Pattern pattern = Pattern.compile(regStr);
+        Matcher matcher = pattern.matcher(content);
+        while (matcher.find()) {
+            System.out.println("匹配到：" + matcher.group(0));
+        }
+    }
+}
+```
+
+```java
+package com.charlie.regexp;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+public class RegExp13 {
+    public static void main(String[] args) {
+        String content = "我...我要...学学学学...编程java";
+        // 1. 去掉所有的.
+        Pattern pattern = Pattern.compile("\\.");
+        Matcher matcher = pattern.matcher(content);
+        content = matcher.replaceAll("");
+//        System.out.println(content);    // 我我要学学学学编程java
+
+        // 2. 去掉重复的字
+        /*
+        思路
+        1) 使用 (.)\\1+ 匹配连续出现的任意字符
+        2) 使用 反向引用$1
+         */
+//        pattern = Pattern.compile("(.)\\1+");
+//        matcher = pattern.matcher(content);
+//        while (matcher.find()) {
+//            System.out.println(matcher.group(0)); // 我我 学学学学
+//        }
+//        // 使用反向引用$1 替换匹配到的内容
+//        content = matcher.replaceAll("$1");
+//        System.out.println(content);
+
+        // 3. 使用一条语句，去掉重复的字
+        content = Pattern.compile("(.)\\1+").matcher(content).replaceAll("$1");
+        System.out.println(content);
+    }
+}
+```
+
+### String类中使用正则表达式
+
+```java
+package com.charlie.regexp;
+
+public class StringReg {
+    public static void main(String[] args) {
+        String content = "附加额外开发和你就问吧v我就分解为开发那我就服你JDK1.3dwjdji还无法金额分别为JDK1.4复活节二百万厚积薄发JDK1.4dwjkdno";
+
+        // 使用正则表达式，将JDK1.3和JDK1.4替换为JDK
+        content = content.replaceAll("JDK1\\.[3-4]", "JDK");
+        System.out.println(content);
+
+        // 验证一个手机号，要求必须是以 139 139开头
+        content = "13688889999";
+        System.out.println(content.matches("13(6|8)\\d{8}") ? "验证成功！" : "验证失败~");
+
+        // 分隔功能：要求按照#或者-或者~或者数字来分割
+        content = "hello#abc-jack12smith~北京";
+        String[] split = content.split("#|-|~|\\d+");
+        for (String s : split) {
+            System.out.println(s);
+        }
+    }
+}
+```
+
+- [作业练习](chapter27_regular_expression/src/com/charlie/regexp/Homework.java)
+
+### Java正则表达式参考
+
+#### 一、校验数字的表达式
+
+1. 数字：^[0-9]*$
+2. n位的数字：^\d{n}$
+3. 至少n位的数字：^\d{n,}$
+4. m-n位的数字：^\d{m,n}$
+5. 零和非零开头的数字：^(0|[1-9][0-9]*)$
+6. 非零开头的最多带两位小数的数字：^([1-9][0-9]*)+(.[0-9]{1,2})?$
+7. 带1-2位小数的正数或负数：^(\-)?\d+(\.\d{1,2})?$
+8. 正数、负数、和小数：^(\-|\+)?\d+(\.\d+)?$
+9. 有两位小数的正实数：^[0-9]+(.[0-9]{2})?$
+10. 有1~3位小数的正实数：^[0-9]+(.[0-9]{1,3})?$
+11. 非零的正整数：^[1-9]\d*$ 或 ^([1-9][0-9]*){1,3}$ 或 ^\+?[1-9][0-9]*$
+12. 非零的负整数：^\-[1-9][]0-9"*$ 或 ^-[1-9]\d*$
+13. 非负整数：^\d+$ 或 ^[1-9]\d*|0$
+14. 非正整数：^-[1-9]\d*|0$ 或 ^((-\d+)|(0+))$
+15. 非负浮点数：^\d+(\.\d+)?$ 或 ^[1-9]\d*\.\d*|0\.\d*[1-9]\d*|0?\.0+|0$
+16. 非正浮点数：^((-\d+(\.\d+)?)|(0+(\.0+)?))$ 或 ^(-([1-9]\d*\.\d*|0\.\d*[1-9]\d*))|0?\.0+|0$
+17. 正浮点数：^[1-9]\d*\.\d*|0\.\d*[1-9]\d*$ 或 ^(([0-9]+\.[0-9]*[1-9][0-9]*)|([0-9]*[1-9][0-9]*\.[0-9]+)|([0-9]*[1-9][0-9]*))$
+18. 负浮点数：^-([1-9]\d*\.\d*|0\.\d*[1-9]\d*)$ 或 ^(-(([0-9]+\.[0-9]*[1-9][0-9]*)|([0-9]*[1-9][0-9]*\.[0-9]+)|([0-9]*[1-9][0-9]*)))$
+19. 浮点数：^(-?\d+)(\.\d+)?$ 或 ^-?([1-9]\d*\.\d*|0\.\d*[1-9]\d*|0?\.0+|0)$
+
+#### 二、校验字符的表达式
+
+1. 汉字：^[\u4e00-\u9fa5]{0,}$
+2. 英文和数字：^[A-Za-z0-9]+$ 或 ^[A-Za-z0-9]{4,40}$
+3. 长度为3-20的所有字符：^.{3,20}$
+4. 由26个英文字母组成的字符串：^[A-Za-z]+$
+5. 由26个大写英文字母组成的字符串：^[A-Z]+$
+6. 由26个小写英文字母组成的字符串：^[a-z]+$
+7. 由数字和26个英文字母组成的字符串：^[A-Za-z0-9]+$
+8. 由数字、26个英文字母或者下划线组成的字符串：^\w+$ 或 ^\w{3,20}$
+9. 中文、英文、数字包括下划线：^[\u4E00-\u9FA5A-Za-z0-9_]+$
+10. 中文、英文、数字但不包括下划线等符号：^[\u4E00-\u9FA5A-Za-z0-9]+$ 或 ^[\u4E00-\u9FA5A-Za-z0-9]{2,20}$
+11. 可以输入含有^%&',;=?$\"等字符：[^%&',;=?$\x22]+
+12. 禁止输入含有~的字符：[^~\x22]+
+
+#### 三、特殊需求表达式
+
+1. Email地址：^\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$
+2. 域名：[a-zA-Z0-9][-a-zA-Z0-9]{0,62}(/.[a-zA-Z0-9][-a-zA-Z0-9]{0,62})+/.?
+3. InternetURL：[a-zA-z]+://[^\s]* 或 ^https://([\w-]+\.)+[\w-]+(/[\w-./?%&=]*)?$
+4. 手机号码：^(13[0-9]|14[5|7]|15[0|1|2|3|5|6|7|8|9]|18[0|1|2|3|5|6|7|8|9])\d{8}$
+5. 电话号码("XXX-XXXXXXX"、"XXXX-XXXXXXXX"、"XXX-XXXXXXX"、"XXX-XXXXXXXX"、"XXXXXXX"和"XXXXXXXX)：^(\(\d{3,4}-)|\d{3.4}-)?\d{7,8}$
+6. 国内电话号码(0511-4405222、021-87888822)：\d{3}-\d{8}|\d{4}-\d{7}
+7. 身份证号：
+    - 15或18位身份证：^\d{15}|\d{18}$
+    - 15位身份证：^[1-9]\d{7}((0\d)|(1[0-2]))(([0|1|2]\d)|3[0-1])\d{3}$
+    - 18位身份证：^[1-9]\d{5}[1-9]\d{3}((0\d)|(1[0-2]))(([0|1|2]\d)|3[0-1])\d{4}$
+8. 短身份证号码(数字、字母x结尾)：^([0-9]){7,18}(x|X)?$ 或 ^\d{8,18}|[0-9x]{8,18}|[0-9X]{8,18}?$
+9. 帐号是否合法(字母开头，允许5-16字节，允许字母数字下划线)：^[a-zA-Z][a-zA-Z0-9_]{4,15}$
+10. 密码(以字母开头，长度在6~18之间，只能包含字母、数字和下划线)：^[a-zA-Z]\w{5,17}$
+11. 强密码(必须包含大小写字母和数字的组合，不能使用特殊字符，长度在8-10之间)：^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,10}$
+12. 日期格式：^\d{4}-\d{1,2}-\d{1,2}
+13. 一年的12个月(01～09和1～12)：^(0?[1-9]|1[0-2])$
+14. 一个月的31天(01～09和1～31)：^((0?[1-9])|((1|2)[0-9])|30|31)$
+15. 钱的输入格式：
+16. 1.有四种钱的表示形式我们可以接受:"10000.00" 和 "10,000.00", 和没有 "分" 的 "10000" 和 "10,000"：^[1-9][0-9]*$
+17. 2.这表示任意一个不以0开头的数字,但是,这也意味着一个字符"0"不通过,所以我们采用下面的形式：^(0|[1-9][0-9]*)$
+18. 3.一个0或者一个不以0开头的数字.我们还可以允许开头有一个负号：^(0|-?[1-9][0-9]*)$
+19. 4.这表示一个0或者一个可能为负的开头不为0的数字.让用户以0开头好了.把负号的也去掉,因为钱总不能是负的吧.下面我们要加的是说明可能的小数部分：^[0-9]+(.[0-9]+)?$
+20. 5.必须说明的是,小数点后面至少应该有1位数,所以"10."是不通过的,但是 "10" 和 "10.2" 是通过的：^[0-9]+(.[0-9]{2})?$
+21. 6.这样我们规定小数点后面必须有两位,如果你认为太苛刻了,可以这样：^[0-9]+(.[0-9]{1,2})?$
+22. 7.这样就允许用户只写一位小数.下面我们该考虑数字中的逗号了,我们可以这样：^[0-9]{1,3}(,[0-9]{3})*(.[0-9]{1,2})?$
+23. 8.1到3个数字,后面跟着任意个 逗号+3个数字,逗号成为可选,而不是必须：^([0-9]+|[0-9]{1,3}(,[0-9]{3})*)(.[0-9]{1,2})?$
+24. 备注：这就是最终结果了,别忘了"+"可以用"*"替代如果你觉得空字符串也可以接受的话(奇怪,为什么?)最后,别忘了在用函数时去掉去掉那个反斜杠,一般的错误都在这里
+25. xml文件：^([a-zA-Z]+-?)+[a-zA-Z0-9]+\\.[x|X][m|M][l|L]$
+26. 中文字符的正则表达式：[\u4e00-\u9fa5]
+27. 双字节字符：[^\x00-\xff] (包括汉字在内，可以用来计算字符串的长度(一个双字节字符长度计2，ASCII字符计1))
+28. 空白行的正则表达式：\n\s*\r (可以用来删除空白行)
+29. HTML标记的正则表达式：<(\S*?)[^>]*>.*?|<.*? /> (网上流传的版本太糟糕，上面这个也仅仅能部分，对于复杂的嵌套标记依旧无能为力)
+30. 首尾空白字符的正则表达式：^\s*|\s*$或(^\s*)|(\s*$) (可以用来删除行首行尾的空白字符(包括空格、制表符、换页符等等)，非常有用的表达式)
+31. 腾讯QQ号：[1-9][0-9]{4,} (腾讯QQ号从10000开始)
+32. 中国邮政编码：[1-9]\d{5}(?!\d) (中国邮政编码为6位数字)
+33. IP地址：\d+\.\d+\.\d+\.\d+ (提取IP地址时有用)
